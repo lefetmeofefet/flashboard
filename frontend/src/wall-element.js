@@ -100,7 +100,6 @@ createYoffeeElement("wall-element", (props, self) => {
         display: flex;
         height: inherit;
         position: relative;
-        /*background-image: url("../res/wall.jpg"); DEFINED BELOW */
         background-size: 100% 100%; /* Stretches the image to fit the div exactly */
         background-position: center; /* Centers the image in the div */
         background-repeat: no-repeat; /* Prevents tiling */
