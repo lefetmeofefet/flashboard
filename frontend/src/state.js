@@ -3,6 +3,7 @@ import {showToast} from "../utilz/toaster.js";
 import {Api} from "./api.js";
 import {Bluetooth} from "./bluetooth.js";
 import {SORT_TYPES} from "./routes-page/routes-filter.js";
+import {Flutter} from "./flutter-interface.js";
 
 const LOCALSTORAGE_AUTO_LEDS_KEY = "auto_ledz"
 function setAutoLeds(autoLeds) {
@@ -200,9 +201,13 @@ function onBackClicked() {
             exitRoutePage()
         } else if (GlobalState.selectedWall != null) {
             exitWall()
+        } else {
+            Flutter.exitApp()
         }
     }
 }
+// For flutter
+window.onBackClicked = onBackClicked
 
 function sortRoutes() {
     GlobalState.routes = GlobalState.routes.sort((r1, r2) => {

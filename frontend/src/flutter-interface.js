@@ -21,20 +21,14 @@ function triggerGoogleSignIn() {
     sendMessageToFlutter("GOOGLE_SIGN_IN")
 }
 
-// // Log all console messages so Flutter can capture them
-// (function () {
-//     const oldLog = console.log;
-//     console.log = function (message) {
-//         oldLog.apply(console, arguments);
-//         if (window.FlutterChannel) {
-//             window.FlutterChannel.postMessage("[Console] " + message);
-//         }
-//     };
-// })();
+function exitApp() {
+    sendMessageToFlutter("EXIT_APP")
+}
 
 const Flutter = {
     isInFlutter,
     triggerGoogleSignIn,
+    exitApp
 }
 
 export {Flutter}
