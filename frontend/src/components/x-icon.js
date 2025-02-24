@@ -15,6 +15,7 @@ customElements.define("x-icon", class extends YoffeeElement {
             </style>
             
             <i class="${() => this.props.icon}"></i>
+<!--            X-->
         `
     }
 });

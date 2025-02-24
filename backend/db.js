@@ -151,11 +151,12 @@ async function getWallInfo(wallId, userId) {
     WITH wall, 
          users, 
          [u IN users WHERE u.id = $userId][0].node AS user
-    OPTIONAL MATCH (wall) -[:has]-> (route:Route) <-[e:sent|liked]- (user)
+    OPTIONAL MATCH (wall) -[:has]-> (route:Route) <-[e:sent|liked|starred]- (user)
     WITH wall, 
          users, 
          COLLECT(CASE WHEN TYPE(e) = "sent" THEN route.id ELSE null END) AS sentRouteIds,
-         COLLECT(CASE WHEN TYPE(e) = "liked" THEN route.id ELSE null END) AS likedRouteIds
+         COLLECT(CASE WHEN TYPE(e) = "liked" THEN route.id ELSE null END) AS likedRouteIds,
+         COLLECT(CASE WHEN TYPE(e) = "starred" THEN {routeId: route.id, stars: e.stars} ELSE null END) AS starredRoutes
     RETURN wall.id as id,
            wall.macAddress as macAddress,
            wall.code as code,
@@ -165,6 +166,7 @@ async function getWallInfo(wallId, userId) {
            wall.createdAt as createdAt,
            sentRouteIds as sentRouteIds,
            likedRouteIds as likedRouteIds,
+           starredRoutes as starredRoutes,
            [i IN range(0, size(users) - 1) | {id: users[i].id, nickname: users[i].nickname, isAdmin: users[i].isAdmin}] AS users
     `, {wallId, userId})
 }
@@ -214,7 +216,7 @@ async function getRoutes(wallId, whereClause, parameters) {
            route.createdAt as createdAt,
            route.name as name, 
            route.grade as grade,
-           route.stars as stars,
+           route.starsAvg as starsAvg,
            route.type as type,
            route.lists as lists,
            sends as sends,
@@ -238,7 +240,7 @@ async function createRoute(wallId, setterId) {
         id: randomUUID(),
         createdAt: timestamp(),
         name: "I AM ROUTE",
-        stars: 0,
+        starsAvg: 0,
         grade: 3,
         lists: [],
         type: "${ROUTE_TYPES.ALL_HOLDS}"
@@ -249,7 +251,7 @@ async function createRoute(wallId, setterId) {
            route.createdAt as createdAt,
            route.name as name, 
            route.grade as grade,
-           route.stars as stars,
+           route.starsAvg as starsAvg,
            route.type as type,
            route.lists as lists,
            0 as sends,
@@ -334,6 +336,20 @@ async function updateLikedStatus(wallId, routeId, userId, liked) {
     }
 }
 
+async function starRoute(wallId, userId, routeId, stars) {
+    return await queryNeo4jSingleResult(`
+    MATCH (wall:Wall{id: $wallId}) -[:has]-> (route:Route{id: $routeId}), (user:User{id: $userId}) 
+    MERGE (user) -[e:starred]-> (route)
+    SET e.stars = $stars
+    
+    WITH route
+    MATCH (route:Route{id: $routeId}) <-[e:starred]- (:User)
+    WITH route, avg(e.stars) AS starsAvg
+    SET route.starsAvg = starsAvg
+    RETURN starsAvg
+    `, {wallId, userId, routeId, stars})
+}
+
 async function deleteRoute(wallId, routeId) {
     await queryNeo4j(`
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (route:Route{id: $routeId})
@@ -411,13 +427,6 @@ async function removeHoldFromRoute(wallId, holdId, routeId) {
     MATCH (route:Route{id: $routeId}) -[e:has]-> (hold:Hold{id: $holdId}) <-[:has]- (wall:Wall{id: $wallId})
     DELETE e
     `, {wallId, holdId, routeId})
-}
-
-async function setRouteStars(wallId, routeId, stars) {
-    await queryNeo4j(`
-    MATCH (wall:Wall{id: $wallId}) -[:has]-> (route:Route{id: $routeId})
-    SET route.stars = $stars
-    `, {wallId, routeId, stars})
 }
 
 const USER_INFO_RETURN_QUERY = `
@@ -519,7 +528,7 @@ export {
     deleteHold,
     addHoldToRoute,
     removeHoldFromRoute,
-    setRouteStars,
+    starRoute,
     closeConnection,
     setWallAdmin,
     getRouteSenders

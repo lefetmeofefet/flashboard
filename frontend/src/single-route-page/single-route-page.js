@@ -187,6 +187,12 @@ createYoffeeElement("single-route-page", (props, self) => {
         color: var(--secondary-color);
     }
     
+    #stars-dialog {
+        padding: 10px 20px;
+        --star-size: 20px;
+        --star-padding: 5px;
+    }
+    
     .header-input {
         background-color: transparent;
         width: -webkit-fill-available;
@@ -230,18 +236,8 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
     
     #bottom-buttons > #star-button {
-        /*transform: translate(-50%, 0);*/
-        font-size: 16px;
-        gap: 0;
-    }
-    
-    #bottom-buttons > #star-button[three-stars] {
-        font-size: 14px;
-    }
-    
-    #bottom-buttons > #star-button[active] {
-        background-color: #BFA100;
-        color: var(--text-color-on-secondary);
+        padding-right: 20px;
+        padding-left: 20px;
     }
     
     #bottom-buttons > #turn-on-leds-button {
@@ -478,20 +474,28 @@ createYoffeeElement("single-route-page", (props, self) => {
     </x-button>
     
     <x-button id="star-button"
-              active=${() => GlobalState.selectedRoute?.stars > 0}
-              three-stars=${() => GlobalState.selectedRoute?.stars === 3}
+              tabindex="0"
               onclick=${async () => {
-                  let stars = (GlobalState.selectedRoute.stars || 0) + 1
-                  if (stars > 3) {
-                      stars = 0
-                  }
-                  GlobalState.selectedRoute.stars = stars
-                  await Api.setRouteStars(GlobalState.selectedRoute.id, stars)
-              }}>
-        <x-icon icon="fa fa-star"></x-icon>
-        ${() => GlobalState.selectedRoute?.stars > 1 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-        ${() => GlobalState.selectedRoute?.stars > 2 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
+                  let _dropdown = self.shadowRoot.querySelector("#stars-dialog")
+                  let _button = self.shadowRoot.querySelector("#star-button")
+                  _dropdown.toggle(_button, true, 50, "top")
+              }}
+              onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#stars-dialog").close())}>
+        <x-rating rating=${() => GlobalState.selectedRoute?.starsAvg}
+                  onestar
+        ></x-rating>
     </x-button>
+    <x-dialog id="stars-dialog"
+              class="header-dialog">
+        <x-rating rating=${() => GlobalState.selectedRoute?.userStars}
+                  picked=${() => async stars => {
+                      GlobalState.selectedRoute.userStars = stars
+                      let response = await Api.starRoute(GlobalState.selectedRoute.id, stars)
+                      GlobalState.selectedRoute.starsAvg = response.starsAvg
+                      GlobalState.selectedWall.starredRoutes[GlobalState.selectedRoute.id] = stars
+                      requestAnimationFrame(() => self.shadowRoot.querySelector("#stars-dialog").close())
+                  }}></x-rating>
+    </x-dialog>
     
     <x-button id="log-send-button"
               active=${() => GlobalState.selectedRoute?.sent}

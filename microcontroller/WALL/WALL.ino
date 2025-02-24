@@ -25,7 +25,7 @@ int appleIndex = -1;
 
 String getWallName() {
   preferences.begin("settings", true);  // Open in read-only mode
-  String defaultName = "WHOL";
+  String defaultName = "Flashboard";
   String value = preferences.getString("wallName", defaultName);
   preferences.end();
   return value;

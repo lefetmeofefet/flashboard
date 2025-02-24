@@ -1,4 +1,3 @@
-import neo4j from "neo4j-driver";
 import {closeConnection, queryNeo4j} from "../backend/db.js";
 import fs from "fs";
 
@@ -12,7 +11,7 @@ let result = await queryNeo4j(
     `,
 )
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const filename = `backups/whol-neo4j-backup-${timestamp}.json`;
+const filename = `backups/flashboard-neo4j-backup-${timestamp}.json`;
 
 // Write the data to a JSON file
 fs.writeFileSync(filename, JSON.stringify(result[0], null, 2), 'utf8');

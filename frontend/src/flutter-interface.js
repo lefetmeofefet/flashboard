@@ -1,10 +1,5 @@
-// Function to receive messages from Flutter
-window.receiveFromFlutter = function (message) {
-    console.log("Received from Flutter:", message);
-    alert("Flutter says: " + message);
-};
+import {onBackClicked} from "./state.js";
 
-// Send a message to Flutter
 function sendMessageToFlutter(type, value) {
     if (window.FlutterChannel) {
         window.FlutterChannel.postMessage(JSON.stringify({type, value}));
@@ -25,10 +20,49 @@ function exitApp() {
     sendMessageToFlutter("EXIT_APP")
 }
 
+let btConnectionFinishResolver
+async function connectToBoardBluetooth() {
+    console.log("Connecting to board bluetooth via app")
+    sendMessageToFlutter("CONNECT_TO_BLUETOOTH")
+    let wallName = await new Promise(resolve => btConnectionFinishResolver = resolve)
+    console.log("Finished connecting to board bluetooth via app, wall name: " + wallName)
+    return wallName
+}
+
+function disconnectFromBoardBluetooth() {
+    sendMessageToFlutter("DISCONNECT_FROM_BLUETOOTH")
+}
+
+function sendMessageToBoardBluetooth(message) {
+    sendMessageToFlutter("SEND_BLUETOOTH_MESSAGE", message)
+}
+
+// Functions that flutter can call
+window.FlutterMessages = {
+    backNavigation: () => {
+        onBackClicked()
+    },
+    signInWithGoogle: function() {
+        window.signInWithGoogleIdAndEmail(...arguments)
+    },
+    onBtConnected: wallName => {
+        btConnectionFinishResolver && btConnectionFinishResolver(wallName)
+    },
+    onBtDisconnected: () => {
+        onFlutterBtDisconnect()
+    },
+    onBtMessage: message => {
+        onFlutterBtMessage(message)
+    },
+}
+
 const Flutter = {
     isInFlutter,
     triggerGoogleSignIn,
-    exitApp
+    exitApp,
+    connectToBoardBluetooth,
+    disconnectFromBoardBluetooth,
+    sendMessageToBoardBluetooth
 }
 
 export {Flutter}

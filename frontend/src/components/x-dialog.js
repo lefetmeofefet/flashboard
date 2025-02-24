@@ -79,7 +79,7 @@ ${() => !this.state.open && html()`
 `
     }
 
-    open(anchor, shouldPopIntoScreen, margin) {
+    open(anchor, shouldPopIntoScreen, margin, direction="bottom") {
         if (anchor === "center") {
             this.state.position = {x: 0, y: 0}
             this.state.isCentered = true
@@ -90,7 +90,7 @@ ${() => !this.state.open && html()`
                     y: anchor.y
                 } : {
                     x: anchor.offsetLeft,
-                    y: anchor.offsetTop + anchor.offsetHeight + 5
+                    y: direction === "bottom" ? (anchor.offsetTop + anchor.offsetHeight + 5) : (anchor.offsetTop - margin || 0)
                 };
             this.state.isCentered = false
         }

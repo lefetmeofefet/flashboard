@@ -14,6 +14,7 @@ import "./routes-page/routes-page.js"
 import "./components/text-input.js"
 import "./components/x-button.js"
 import "./components/x-icon.js"
+import "./components/x-rating.js"
 import "./components/x-checkbox.js"
 import "./components/x-tag.js"
 

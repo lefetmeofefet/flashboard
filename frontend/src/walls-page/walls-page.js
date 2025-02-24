@@ -30,7 +30,10 @@ createYoffeeElement("walls-page", () => {
             await loadRoutesAndHolds(true, wallId)
 
             if (urlParams.route != null) {
-                await enterRoutePage(GlobalState.routes.find(r => r.id === urlParams.route))
+                let route = GlobalState.routes.find(r => r.id === urlParams.route)
+                if (route != null) {
+                    await enterRoutePage(route)
+                }
             }
         } finally {
             GlobalState.loading = false

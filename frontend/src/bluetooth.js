@@ -14,6 +14,9 @@ async function disconnectFromBluetooth() {
         if (btServer != null) {
             await btServer.disconnect()
         }
+        if (Flutter.isInFlutter()) {
+            Flutter.disconnectFromBoardBluetooth()
+        }
     } catch(e) {
         console.log("Failed disconnecting from BT")
         console.error(e)
@@ -26,8 +29,12 @@ async function disconnectFromBluetooth() {
 async function scanAndConnect(onMessageCb, onDisconnectCb) {
     if (Flutter.isInFlutter()) {
         console.log("IN FLUTTER!!!")
-        // TODO: do flutter bt code
+        // TODO: implement onDisconnectCb
+        window.onFlutterBtMessage = message => onMessageCb(message)
+        window.onFlutterBtDisconnect = () => onDisconnectCb()
+        return await Flutter.connectToBoardBluetooth()
     }
+
     const device = await navigator.bluetooth.requestDevice({
         filters: [{services: [WALL_SERVICE_ID]}],
         optionalServices: [WALL_SERVICE_ID],
@@ -155,12 +162,13 @@ const messageQueue = []
 async function sendBTMessageFromQueue(message) {
     try {
         const encoder = new TextEncoder()
-        console.log("Sending to esp: ", message)
+        console.log("Sending to esp: ", JSON.stringify(message))
+        let msg = JSON.stringify(message)
         if (Flutter.isInFlutter()) {
-            console.log("IN FUTTER!!!!")
-            // TODO: special flutter codingzz
+            Flutter.sendMessageToBoardBluetooth(msg)
+        } else {
+            await characteristic.writeValue(encoder.encode(msg))
         }
-        await characteristic.writeValue(encoder.encode(JSON.stringify(message)))
     } catch (e) {
         console.log("Error sending bluetooth message: ", {e})
         console.error(e)

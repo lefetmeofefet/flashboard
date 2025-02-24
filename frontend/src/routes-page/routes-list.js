@@ -23,7 +23,7 @@ createYoffeeElement("routes-list", (props, self) => {
 
     self.addEventListener("scroll", () => {
         let scroll = self.scrollHeight - self.scrollTop - self.clientHeight
-        if (scroll <= 300 && state.numRoutesToShow < GlobalState.routes.length) {
+        if (scroll <= 300 && state.numRoutesToShow < getFilteredRoutes().length) {
             state.numRoutesToShow += MAX_ROUTES_OUT_OF_SCREEN
             routesToShow += MAX_ROUTES_OUT_OF_SCREEN
         }
@@ -121,11 +121,11 @@ createYoffeeElement("routes-list", (props, self) => {
         font-size: 12px;
     }
     
-    .route > .stars {
-        color: #BFA100;
-        display: flex;
-        font-size: 12px;
+    .route > x-rating {
         margin-left: auto;
+        --star-size: 12px;
+        --star-padding: 0px;
+        flex-wrap: wrap;
     }
     
     .route > .grade {
@@ -134,50 +134,7 @@ createYoffeeElement("routes-list", (props, self) => {
 </style>
 
 ${() => {
-    let filteredRoutes = GlobalState.routes
-        .filter(route => {
-            for (let filter of GlobalState.filters) {
-                if (filter.type === FILTER_TYPES.GRADE) {
-                    if (route.grade < filter.value.min || route.grade > filter.value.max) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.RATING) {
-                    if (route.stars < filter.value) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.SETTER) {
-                    if (route.setters[0]?.id !== filter.value.id) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.LIKED_ROUTES) {
-                    if (!route.liked) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.SENT_BY_ME) {
-                    if (!route.sent) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.NOT_SENT_BY_ME) {
-                    if (route.sent) {
-                        return false
-                    }
-                } else if (filter.type === FILTER_TYPES.IN_LIST) {
-                    if (!(route.lists || []).includes(filter.value)) {
-                        return false
-                    }
-                }
-            }
-            if (GlobalState.freeTextFilter != null) {
-                if (route.name.toLowerCase().includes(GlobalState.freeTextFilter.toLowerCase())) {
-                    return true
-                }
-                if (route.setters[0]?.nickname.toLowerCase().includes(GlobalState.freeTextFilter.toLowerCase())) {
-                    return true
-                }
-                return false
-            }
-            return true
-        })
+    let filteredRoutes = getFilteredRoutes()
         .filter((_, index) => index < state.numRoutesToShow)
         if (filteredRoutes.length === 0) {
             if (GlobalState.holds.length === 0) {
@@ -201,14 +158,57 @@ ${() => {
         </div>
     </div>
     
-    <div class="stars">
-        ${() => route.stars > 0 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-        ${() => route.stars > 1 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-        ${() => route.stars > 2 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-    </div>
+    <x-rating rating=${() => route.starsAvg}
+              onlyactive></x-rating>
     
     <div class="grade">V${() => route.grade}</div>
 </x-button>`)
 }}
 `
 })
+
+function getFilteredRoutes() {
+    return GlobalState.routes.filter(route => {
+        for (let filter of GlobalState.filters) {
+            if (filter.type === FILTER_TYPES.GRADE) {
+                if (route.grade < filter.value.min || route.grade > filter.value.max) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.RATING) {
+                if (route.starsAvg < filter.value) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.SETTER) {
+                if (route.setters[0]?.id !== filter.value.id) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.LIKED_ROUTES) {
+                if (!route.liked) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.SENT_BY_ME) {
+                if (!route.sent) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.NOT_SENT_BY_ME) {
+                if (route.sent) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.IN_LIST) {
+                if (!(route.lists || []).includes(filter.value)) {
+                    return false
+                }
+            }
+        }
+        if (GlobalState.freeTextFilter != null) {
+            if (route.name.toLowerCase().includes(GlobalState.freeTextFilter.toLowerCase())) {
+                return true
+            }
+            if (route.setters[0]?.nickname.toLowerCase().includes(GlobalState.freeTextFilter.toLowerCase())) {
+                return true
+            }
+            return false
+        }
+        return true
+    })
+}

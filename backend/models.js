@@ -1,7 +1,7 @@
 
 
 class Wall {
-    constructor(id, name, brightness, image, likedRouteIds, sentRouteIds, users, createdAt) {
+    constructor(id, name, brightness, image, likedRouteIds, sentRouteIds, starredRoutes, users, createdAt) {
         this.id = id
         this.name = name
         this.brightness = brightness
@@ -10,6 +10,8 @@ class Wall {
         this.likedRouteIds = likedRouteIds
         /** @type {Set} */
         this.sentRouteIds = sentRouteIds
+        /** @type {[{routeId, stars}]} */
+        this.starredRoutes = starredRoutes
 
         /** @type {User[]} */
         this.users = users
@@ -32,7 +34,8 @@ class Route {
 
         /** @type {Hold[]} */
         this.holds = holds || []
-        this.stars = 0
+        this.starsAvg = 0
+        this.userStars = 0
         this.sent = sent
         this.liked = liked
         this.sends = sends

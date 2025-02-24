@@ -56,7 +56,6 @@ createYoffeeElement("routes-filter", (props, self) => {
 
         if (filterType === FILTER_TYPES.GRADE) {
             setFilter(FILTER_TYPES.GRADE, {min: 0, max: 18})
-
             let gradeTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.GRADE)}"]`)
             gradeTag.dispatchEvent(new Event('mousedown'))
             gradeTag.focus()
@@ -74,6 +73,10 @@ createYoffeeElement("routes-filter", (props, self) => {
             listTag.focus()
         } else if (filterType === FILTER_TYPES.RATING) {
             setFilter(FILTER_TYPES.RATING, 1)
+            state.editedFilterType = filterType
+            let ratingTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.RATING)}"]`)
+            ratingTag.dispatchEvent(new Event('mousedown'))
+            ratingTag.focus()
         } else if (filterType === FILTER_TYPES.LIKED_ROUTES) {
             setFilter(FILTER_TYPES.LIKED_ROUTES, true)
         } else if (filterType === FILTER_TYPES.SENT_BY_ME) {
@@ -117,11 +120,16 @@ createYoffeeElement("routes-filter", (props, self) => {
             }
             state.editedFilterType = filter.type
         } else if (filter.type === FILTER_TYPES.RATING) {
-            filter.value += 1
-            if (filter.value > 3) {
-                filter.value = 1
+            let _dropdown = self.shadowRoot.querySelector("#edit-filter-dialog")
+            let ratingTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.RATING)}"]`)
+            if (state.editedFilterType === filter.type) {
+                _dropdown.toggle(ratingTag, true)
+            } else {
+                // If we're clicking a different filter, we shouldn't close the dialog
+                _dropdown.close()
+                requestAnimationFrame(() => _dropdown.open(ratingTag, true))
             }
-            setFilter(FILTER_TYPES.RATING, filter.value)
+            state.editedFilterType = filter.type
         } else if (filter.type === FILTER_TYPES.LIKED_ROUTES) {
             GlobalState.filters = GlobalState.filters.filter(f => f.type !== FILTER_TYPES.LIKED_ROUTES)
         } else if (filter.type === FILTER_TYPES.SENT_BY_ME) {
@@ -196,6 +204,12 @@ createYoffeeElement("routes-filter", (props, self) => {
         color: var(--secondary-color);
     }
     
+    .stars-dialog {
+        padding: 10px 20px;
+        --star-size: 20px;
+        --star-padding: 5px;
+    }
+    
     #sorting-tag > x-icon {
         transform: rotate(90deg) scaleX(0.8);;
     }
@@ -222,19 +236,6 @@ createYoffeeElement("routes-filter", (props, self) => {
     x-double-slider {
         --circle-color: var(--secondary-color);
         width: 80vw;
-    }
-    
-    .stars-container {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .stars-container > .stars {
-        color: #BFA100;
-        display: flex;
-        font-size: 12px;
-        margin-left: auto;
     }
     
 </style>
@@ -292,13 +293,12 @@ ${() => GlobalState.filters.map(filter => html(filter)`
             `
         } else if (filter.type === FILTER_TYPES.RATING) {
             return html()`
-            <div class="stars-container">
+            <div class="stars-container"
+                 style="display: flex; align-items: center">
                 <div>Rating: </div>
-                <div class="stars">
-                    ${() => filter.value > 0 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-                    ${() => filter.value > 1 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-                    ${() => filter.value > 2 ? html()`<x-icon icon="fa fa-star"></x-icon>` : ""}
-                </div>
+                <x-rating rating=${() => filter.value}
+                          onlyactive
+                          style="--star-size: 12px; --star-padding: 0; margin-left: 3px;"></x-rating>
             </div>
             `
         } else if (filter.type === FILTER_TYPES.LIKED_ROUTES) {
@@ -402,6 +402,19 @@ ${() => GlobalState.filters.map(filter => html(filter)`
                     ${() => list}
                 </div>
                 `)}
+            </div>
+            `
+        } else if (state.editedFilterType === FILTER_TYPES.RATING) {
+            if (existingFilter == null) {
+                return
+            }
+            return html()`
+            <div class="stars-dialog">
+                <x-rating rating=${() => existingFilter.value}
+                          picked=${() => stars => {
+                                setFilter(FILTER_TYPES.RATING, stars)
+                                requestAnimationFrame(() => self.shadowRoot.querySelector("#edit-filter-dialog").close())
+                            }}></x-rating>
             </div>
             `
         }

@@ -213,8 +213,8 @@ async function removeHoldFromRoute(holdId, routeId) {
     return await post("/api/removeHoldFromRoute", {wallId: GlobalState.selectedWall.id, holdId, routeId})
 }
 
-async function setRouteStars(routeId, stars) {
-    return await post("/api/setRouteStars", {wallId: GlobalState.selectedWall.id, routeId, stars})
+async function starRoute(routeId, stars) {
+    return await post("/api/starRoute", {wallId: GlobalState.selectedWall.id, routeId, stars})
 }
 
 async function setWallAdmin(userId, isAdmin) {
@@ -246,7 +246,7 @@ const Api = {
     deleteHold,
     addHoldToRoute,
     removeHoldFromRoute,
-    setRouteStars,
+    starRoute,
     googleAuth,
     googleLoginGoogleId,
     login,

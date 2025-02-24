@@ -6,6 +6,7 @@ import {SORT_TYPES} from "./routes-page/routes-filter.js";
 import {Flutter} from "./flutter-interface.js";
 
 const LOCALSTORAGE_AUTO_LEDS_KEY = "auto_ledz"
+
 function setAutoLeds(autoLeds) {
     GlobalState.autoLeds = autoLeds
     localStorage.setItem(LOCALSTORAGE_AUTO_LEDS_KEY, autoLeds ? "true" : "false")
@@ -59,11 +60,13 @@ function isAdmin() {
 }
 
 const LOCALSTORAGE_DARK_THEME_KEY = "darkTheme"
+
 function updateTheme(isDark) {
     GlobalState.darkTheme = isDark;
     document.body.setAttribute("theme", GlobalState.darkTheme ? "dark" : "light")
     localStorage.setItem(LOCALSTORAGE_DARK_THEME_KEY, GlobalState.darkTheme)
 }
+
 let localStorageDarkTheme = localStorage.getItem(LOCALSTORAGE_DARK_THEME_KEY)
 if (localStorageDarkTheme != null) {
     updateTheme(localStorageDarkTheme === "true", true)
@@ -79,6 +82,14 @@ async function loadRoutesAndHolds(includeWallInfo, wallId) {
         delete response.wallInfo.image
         response.wallInfo.likedRouteIds = new Set(response.wallInfo.likedRouteIds)
         response.wallInfo.sentRouteIds = new Set(response.wallInfo.sentRouteIds)
+
+        // Set starredRoutes
+        let starredRoutesList = response.wallInfo.starredRoutes
+        response.wallInfo.starredRoutes = {}
+        for (let starredRoute of starredRoutesList) {
+            response.wallInfo.starredRoutes[starredRoute.routeId] = starredRoute.stars
+        }
+
         GlobalState.selectedWall = response.wallInfo
     }
 
@@ -90,6 +101,7 @@ async function loadRoutesAndHolds(includeWallInfo, wallId) {
         if (GlobalState.selectedWall.sentRouteIds.has(route.id)) {
             route.sent = true
         }
+        route.userStars = GlobalState.selectedWall.starredRoutes[route.id] || 0;
         (route.lists || []).forEach(list => lists.add(list))
     }
     GlobalState.routes = response.routes
@@ -201,13 +213,11 @@ function onBackClicked() {
             exitRoutePage()
         } else if (GlobalState.selectedWall != null) {
             exitWall()
-        } else {
+        } else if (Flutter.isInFlutter()) {
             Flutter.exitApp()
         }
     }
 }
-// For flutter
-window.onBackClicked = onBackClicked
 
 function sortRoutes() {
     GlobalState.routes = GlobalState.routes.sort((r1, r2) => {
@@ -216,7 +226,7 @@ function sortRoutes() {
         } else if (GlobalState.sorting === SORT_TYPES.OLDEST) {
             return r1.createdAt < r2.createdAt ? -1 : 1
         } else if (GlobalState.sorting === SORT_TYPES.RATING) {
-            return r1.stars < r2.stars ? 1 : -1
+            return r1.starsAvg < r2.starsAvg ? 1 : -1
         } else if (GlobalState.sorting === SORT_TYPES.MOST_SENDS) {
             return r1.sends < r2.sends ? 1 : -1
         } else if (GlobalState.sorting === SORT_TYPES.LEAST_SENDS) {

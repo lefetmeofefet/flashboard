@@ -12,7 +12,7 @@ import {
     getWalls,
     moveHold,
     removeHoldFromRoute,
-    setRouteStars,
+    starRoute,
     setUserNickname,
     setWallBrightness,
     setWallImage,
@@ -189,10 +189,12 @@ router.post('/removeHoldFromRoute', async (req, res) => {
     res.json({status: 'success'})
 })
 
-router.post('/setRouteStars', async (req, res) => {
+router.post('/starRoute', async (req, res) => {
     const {wallId, routeId, stars} = req.body
-    await setRouteStars(wallId, routeId, stars)
-    res.json({status: 'success'})
+    let result = await starRoute(wallId, req.userId, routeId, stars)
+    res.json({
+        starsAvg: result.starsAvg
+    })
 })
 
 router.post('/setWallAdmin', async (req, res) => {
