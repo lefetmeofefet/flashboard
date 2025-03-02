@@ -121,7 +121,7 @@ createYoffeeElement("routes-list", (props, self) => {
         font-size: 12px;
     }
     
-    .route > x-rating {
+    x-rating {
         margin-left: auto;
         --star-size: 12px;
         --star-padding: 0px;

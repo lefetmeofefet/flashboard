@@ -122,6 +122,7 @@ ${() => !this.state.open && html()`
 
     close() {
         this.state.open = false
+        this.dispatchEvent(new Event('close'))
     }
 
     isOpen() {

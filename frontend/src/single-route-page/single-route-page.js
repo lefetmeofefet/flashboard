@@ -64,57 +64,71 @@ createYoffeeElement("single-route-page", (props, self) => {
         }
     }
 
+    let _handlingClick = false
     const holdClicked = async (hold, isLongPress) => {
-        if (!state.editMode) {
-            showToast("Click the edit button to edit the route")
+        if (_handlingClick) {
+            return
         }
+        _handlingClick = true
+        try {
+            if (!state.editMode) {
+                showToast("Click the edit button to edit the route")
+            }
 
-        let holdWasInRoute = hold.inRoute
+            if (GlobalState.loading) {
+                // dont allow race conditions
+                return
+            }
 
-        if (state.editMode) {
-            if (isLongPress) {
-                if (hold.inRoute) {
-                    // If it's in route, remove hold from route
-                    hold.holdType = ""
-                    hold.inRoute = false
+            let holdWasInRoute = hold.inRoute
+
+            if (state.editMode) {
+                if (isLongPress) {
+                    if (hold.inRoute) {
+                        // If it's in route, remove hold from route
+                        hold.holdType = ""
+                        hold.inRoute = false
+                    } else {
+                        // If it's not in route, add it as finish hold
+                        hold.holdType = "finish"
+                        hold.inRoute = true
+                    }
                 } else {
-                    // If it's not in route, add it as finish hold
-                    hold.holdType = "finish"
-                    hold.inRoute = true
+                    if (!hold.inRoute) {
+                        hold.inRoute = true
+                        hold.holdType = ""
+                    } else if (hold.holdType === "") {
+                        hold.holdType = "start"
+                    } else if (hold.holdType === "start") {
+                        hold.holdType = "finish"
+                    } else if (hold.holdType === "finish") {
+                        hold.holdType = ""
+                        hold.inRoute = false
+                    }
                 }
-            } else {
-                if (!hold.inRoute) {
-                    hold.inRoute = true
-                    hold.holdType = ""
-                } else if (hold.holdType === "") {
-                    hold.holdType = "start"
-                } else if (hold.holdType === "start") {
-                    hold.holdType = "finish"
-                } else if (hold.holdType === "finish") {
-                    hold.holdType = ""
-                    hold.inRoute = false
+
+                // Set Bluetooth LED
+                if (state.highlightingRoute) {
+                    await Bluetooth.setHoldState(hold)
                 }
-            }
 
-            // Set Bluetooth LED
-            if (state.highlightingRoute) {
-                await Bluetooth.setHoldState(hold)
-            }
-
-            // Update DB
-            if (holdWasInRoute) {
-                await Api.removeHoldFromRoute(hold.id, GlobalState.selectedRoute.id)
-                if (hold.inRoute) {
-                    // If we just change its type, we have to remove it to add it again with a different holdType
+                // Update DB
+                if (holdWasInRoute) {
+                    await Api.removeHoldFromRoute(hold.id, GlobalState.selectedRoute.id)
+                    if (hold.inRoute) {
+                        // If we just change its type, we have to remove it to add it again with a different holdType
+                        await Api.addHoldToRoute(hold.id, GlobalState.selectedRoute.id, hold.holdType)
+                        GlobalState.selectedRoute.holds.find(h => h.id === hold.id).holdType = hold.holdType
+                    } else {
+                        GlobalState.selectedRoute.holds = GlobalState.selectedRoute.holds.filter(h => h.id !== hold.id)
+                    }
+                } else {
                     await Api.addHoldToRoute(hold.id, GlobalState.selectedRoute.id, hold.holdType)
-                    GlobalState.selectedRoute.holds.find(h => h.id === hold.id).holdType = hold.holdType
-                } else {
-                    GlobalState.selectedRoute.holds = GlobalState.selectedRoute.holds.filter(h => h.id !== hold.id)
+                    GlobalState.selectedRoute.holds.push({id: hold.id, ledId: hold.ledId, holdType: hold.holdType})
                 }
-            } else {
-                await Api.addHoldToRoute(hold.id, GlobalState.selectedRoute.id, hold.holdType)
-                GlobalState.selectedRoute.holds.push({id: hold.id, ledId: hold.ledId, holdType: hold.holdType})
             }
+        } finally {
+            _handlingClick = false
         }
     }
 
@@ -258,7 +272,8 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
 </style>
 
-<secondary-header showconfirmbutton=${() => state.editingTitle}>
+<secondary-header showconfirmbutton=${() => state.editingTitle}
+                  whenclosed=${() => () => state.editingLists = false}>
     <text-input id="route-name-input"
                 class="header-input"
                 slot="title"
@@ -276,75 +291,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                 }}
     ></text-input>
     
-    ${() => (GlobalState.user.id === setterId() || isAdmin()) && (state.editingLists ? html(listsState)`
-        ${() => GlobalState.lists.map(list => html(listsState)`
-        <x-button slot="dialog-item" 
-                  onclick=${async e => {
-                    e.stopPropagation()
-                    listsState[list] = !listsState[list]
-                    let currentLists = GlobalState.selectedRoute.lists || []
-                    let lists = listsState[list] ? [...currentLists, list] : currentLists.filter(l => l !== list)
-                    GlobalState.selectedRoute.lists = lists
-                    await Api.updateRoute(
-                        GlobalState.selectedRoute.id, 
-                        {lists}
-                    )
-                  }}>
-            <x-checkbox value=${() => listsState[list]}></x-checkbox>
-            ${() => list}
-        </x-button>
-        `)}
-        
-        <x-button slot="dialog-item" 
-                  onclick=${async e => {
-                    e.stopPropagation()
-                    let list = prompt("Enter new list name")
-                    if (list != null) {
-                        state[list] = true
-                        
-                        GlobalState.selectedRoute.lists = [...(GlobalState.selectedRoute.lists || []), list]
-                        GlobalState.lists = [...GlobalState.lists, list].sort((a, b) => a < b ? -1 : 1)
-                        await Api.updateRoute(
-                            GlobalState.selectedRoute.id,
-                            {lists: GlobalState.selectedRoute.lists}
-                        )
-                    }
-                  }}>
-            <x-icon icon="fa fa-plus" style="width: 26px;"></x-icon>
-            Create new list
-        </x-button>
-    ` : html()`
-        <x-button slot="dialog-item"
-                  onclick=${async () => {
-                      if (GlobalState.selectedRoute?.sends > 0) {
-                          let senders = await Api.getRouteSenders(GlobalState.selectedRoute.id)
-                          alert("Senders:\n" + senders.map(sender => "- " + sender.nickname).join("\n"))
-                      }
-                  }}>
-            <x-icon icon="fa fa-check" style="width: 20px;"></x-icon>
-            ${() => GlobalState.selectedRoute?.sends} sends
-        </x-button>
-        <x-button slot="dialog-item"
-                  onclick=${() => state.editingLists = true}>
-            <x-icon icon="fa fa-plus" style="width: 20px;"></x-icon>
-            Add to list
-        </x-button>
-        <x-button slot="dialog-item"
-                  onclick=${() => self.shadowRoot.querySelector("#route-name-input")?.focus()}>
-            <x-icon icon="fa fa-edit" style="width: 20px;"></x-icon>
-            Edit route name
-        </x-button>
-        <x-button slot="dialog-item"
-                  onclick=${async () => {
-                        if (confirm(`Delete route ${GlobalState.selectedRoute.name}?`)) {
-                            await Api.deleteRoute(GlobalState.selectedRoute.id)
-                            await exitRoutePage()
-                        }
-                    }}>
-            <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
-            Delete route
-        </x-button>
-    `)}
+    ${() => state.editingLists ? renderEditLists() : renderMenu()}
     
     <div id="bottom-row"
          slot="bottom-row">
@@ -536,4 +483,87 @@ createYoffeeElement("single-route-page", (props, self) => {
     </x-button>
 </div>
 `
+
+    function renderMenu() {
+        let allowedToChange = GlobalState.user.id === setterId() || isAdmin()
+
+        return html()`
+        <x-button slot="dialog-item"
+                  onclick=${async () => {}}>
+            ${() => GlobalState.selectedRoute?.time}
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${async () => {
+            if (GlobalState.selectedRoute?.sends > 0) {
+                let senders = await Api.getRouteSenders(GlobalState.selectedRoute.id)
+                alert("Senders:\n" + senders.map(sender => "- " + sender.nickname).join("\n"))
+            }
+        }}>
+            <x-icon icon="fa fa-check" style="width: 20px;"></x-icon>
+            ${() => GlobalState.selectedRoute?.sends} sends
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${() => state.editingLists = true}>
+            <x-icon icon="fa fa-plus" style="width: 20px;"></x-icon>
+            Add to list
+        </x-button>
+        ${() => allowedToChange && html()`
+        <x-button slot="dialog-item"
+                  onclick=${() => self.shadowRoot.querySelector("#route-name-input")?.focus()}>
+            <x-icon icon="fa fa-edit" style="width: 20px;"></x-icon>
+            Edit route name
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${async () => {
+            if (confirm(`Delete route ${GlobalState.selectedRoute.name}?`)) {
+                await Api.deleteRoute(GlobalState.selectedRoute.id)
+                await exitRoutePage()
+            }
+        }}>
+            <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
+            Delete route
+        </x-button>`}
+        `
+    }
+
+    function renderEditLists() {
+        return html()`
+        ${() => GlobalState.lists.map(list => html(listsState)`
+        <x-button slot="dialog-item" 
+                  onclick=${async e => {
+            e.stopPropagation()
+            listsState[list] = !listsState[list]
+            let currentLists = GlobalState.selectedRoute.lists || []
+            let lists = listsState[list] ? [...currentLists, list] : currentLists.filter(l => l !== list)
+            GlobalState.selectedRoute.lists = lists
+            await Api.updateRoute(
+                GlobalState.selectedRoute.id,
+                {lists}
+            )
+        }}>
+            <x-checkbox value=${() => listsState[list]}></x-checkbox>
+            ${() => list}
+        </x-button>
+        `)}
+        
+        <x-button slot="dialog-item" 
+                  onclick=${async e => {
+            e.stopPropagation()
+            let list = prompt("Enter new list name")
+            if (list != null) {
+                listsState[list] = true
+
+                GlobalState.selectedRoute.lists = [...(GlobalState.selectedRoute.lists || []), list]
+                GlobalState.lists = [...GlobalState.lists, list].sort((a, b) => a < b ? -1 : 1)
+                await Api.updateRoute(
+                    GlobalState.selectedRoute.id,
+                    {lists: GlobalState.selectedRoute.lists}
+                )
+            }
+        }}>
+            <x-icon icon="fa fa-plus" style="width: 26px;"></x-icon>
+            Create new list
+        </x-button>
+        `
+    }
 })

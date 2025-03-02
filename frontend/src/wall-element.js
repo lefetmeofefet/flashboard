@@ -30,7 +30,7 @@ createYoffeeElement("wall-element", (props, self) => {
                     }
                 }))
             } else {
-                holdClicked(clickedHold)
+                await holdClicked(clickedHold)
             }
         }
 
@@ -169,7 +169,7 @@ createYoffeeElement("wall-element", (props, self) => {
     .filter(hold => props.showallholds || hold.inRoute)
     .map(hold => html(hold)`
     <div class="hold"
-         data-hold-type=${hold.inRoute ? (hold.holdType === "" ? "hold" : hold.holdType) : ""}
+         data-hold-type=${() => hold.inRoute ? (hold.holdType === "" ? "hold" : hold.holdType) : ""}
          style="${() => `
             left: ${hold.x * 100}%; 
             bottom: ${hold.y * 100}%; 
@@ -178,7 +178,7 @@ createYoffeeElement("wall-element", (props, self) => {
              clickedHold = hold
              dragStartPosition = {x: e.pageX, y: e.pageY}
              e.stopPropagation()
-             e.preventDefault()
+             // e.preventDefault()
              longPressTimer = setTimeout(() => holdLongPressed(hold), LONG_PRESS_TIME)
          }}
          >

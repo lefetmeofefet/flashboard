@@ -141,10 +141,11 @@ ${() => GlobalState.loading ? html()`
                   let _button = self.shadowRoot.querySelector("#settings-button")
                   _dropdown.toggle(_button, true)
               }}
-              onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#settings-dialog").close())}>
+              onblur=${() => requestAnimationFrame(() => self.closeSettingsDialog())}>
         <x-icon icon="fa fa-bars"></x-icon>
     </div>
-    <x-dialog id="settings-dialog">
+    <x-dialog id="settings-dialog"
+              onclose=${() => props.whenclosed && props.whenclosed()}>
         <div id="settings-container">
             <slot name="dialog-item"></slot>
         </div>
