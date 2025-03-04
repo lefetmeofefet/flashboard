@@ -26,7 +26,8 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     const state = {
         selectedHold: null,
         highlightingLed: GlobalState.autoLeds,
-        placingHoldMode: false
+        placingHoldMode: false,
+        editingLedId: false
     }
 
     async function holdDragged(hold, x, y) {
@@ -192,32 +193,51 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     #led-config-container {
         display: flex;
         align-items: center;
-        margin-left: auto;
-        font-size: 14px;
-        border: 1px solid var(--text-color-on-secondary-weak);
-        border-radius: 100px;
         overflow: hidden;
         white-space: nowrap;
-        min-width: fit-content;
-    }
-    
-    #led-config-container > x-button {
-        box-shadow: none;
-    }
-    
-    #led-config-container > #unlink-led-button {
-        padding: 5px 0;
-        gap: 5px;
+        width: -webkit-fill-available;
+        gap: 6px;
     }
     
     #led-config-container > #assign-led-button {
         gap: 5px;
         padding: 5px 10px;
+        box-shadow: none;
+        border: 1px solid var(--text-color-on-secondary-weak);
+        border-radius: 100px;
+        font-size: 18px;
     }
     
-    #led-config-container > .cycle-led-button {
-        padding: 5px 10px;
+    #led-config-container > #led-input-container {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--text-color-on-secondary-weak);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+    
+    #led-config-container > #led-input-container > .cycle-led-button {
+        padding: 8px 10px;
         height: 21px;
+        font-size: 16px;
+        box-shadow: none;
+    }
+    
+    #led-config-container > #led-input-container > #led-id-input {
+        width: -webkit-fill-available;
+        max-width: 39px;
+        padding: 0 3px;
+        text-align: center;
+    }
+    
+    #led-config-container > #unlink-led-button {
+        padding: 5px 0;
+        gap: 5px;
+        font-size: 16px;
+        margin-right: 10px;
+        margin-left: auto;
+        width: fit-content;
+        box-shadow: none;
     }
     
     wall-element {
@@ -331,11 +351,12 @@ ${() => WallImage == null && html()`
 `}
 
 <secondary-header hidebackbutton=${() => state.placingHoldMode}
-                  showxbutton=${() => state.selectedHold != null}
+                  showxbutton=${() => state.selectedHold != null && !state.editingLedId}
+                  showconfirmbutton=${() => state.editingLedId}
                   xbuttonclicked=${() => () => toggleHold(state.selectedHold)}>
     <div id="title" 
          slot="title">
-        <div id="title-text">${() => state.placingHoldMode ? "Tap anywhere to set hold" : (state.selectedHold == null ? "Configuring wall" : `Hold: ${state.selectedHold.id}`)}</div>
+        ${() => state.selectedHold == null && html()`<div id="title-text">${() => state.placingHoldMode ? "Tap anywhere to set hold" : "Configuring wall"}</div>`}
         ${() => state.selectedHold != null && html(state.selectedHold)`
         <div id="led-config-container">
             ${() => state.selectedHold?.ledId == null ? html()`
@@ -345,18 +366,41 @@ ${() => WallImage == null && html()`
                 <x-icon icon="fa fa-lightbulb"></x-icon>
             </x-button>
             ` : html()`
-            <x-button class="cycle-led-button"
-                      onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId - 1)}>
-                <x-icon icon="fa fa-caret-left"></x-icon>
-            </x-button>
+            <div>LED:</div>
+            
+            <div id="led-input-container">
+                <x-button class="cycle-led-button"
+                          onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId - 1)}>
+                    <x-icon icon="fa fa-caret-left"></x-icon>
+                </x-button>
+                <text-input id="led-id-input"
+                            type="number" 
+                            step="1"
+                            pattern="\d+"
+                            class="header-input"
+                            slot="title"
+                            value=${() => state.selectedHold?.ledId}
+                            changed=${() => async () => {
+                                let ledId = self.shadowRoot.querySelector("#led-id-input").getValue()
+                                setHoldLedId(state.selectedHold, parseInt(ledId))
+                            }}
+                            onblur=${() => state.editingLedId = false}
+                            onfocus=${e => {
+                                if (!e.target.selected) {
+                                    e.target.select()
+                                    state.editingLedId = true
+                                }
+                            }}
+                ></text-input>
+                <x-button class="cycle-led-button"
+                          onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId + 1)}>
+                    <x-icon icon="fa fa-caret-right"></x-icon>
+                </x-button>
+            </div>
+            
             <x-button id="unlink-led-button"
                       onclick=${() => setHoldLedId(state.selectedHold, null)}>
-                ${() => `LED: ${state.selectedHold.ledId}`}
                 <x-icon icon="fa fa-unlink"></x-icon>
-            </x-button>
-            <x-button class="cycle-led-button"
-                      onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId + 1)}>
-                <x-icon icon="fa fa-caret-right"></x-icon>
             </x-button>
             `}
         </div>

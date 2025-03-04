@@ -130,7 +130,7 @@ async function enterConfigureHoldsPage() {
     updateUrlParams({configuring: true})  // Important so that clicking "back" won't exit the site
 
     if (GlobalState.holds.length > 0) {
-        showToast("Holds are draggable now!")
+        showToast("Holds are draggable now!", {position: "bottom"})
     }
 
     if (GlobalState.bluetoothConnected) {

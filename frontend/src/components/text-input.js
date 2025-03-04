@@ -39,6 +39,7 @@ customElements.define("text-input", class extends YoffeeElement {
                     caret-color: inherit;
                     color: inherit;
                     font-family: inherit;
+                    text-align: inherit;
                 }
                 
                 ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -72,6 +73,8 @@ customElements.define("text-input", class extends YoffeeElement {
             </style>
             <slot name="before"></slot>
             <input type="${() => this.props.type}"
+                   step="${() => this.props.step}"
+                   pattern="${() => this.props.pattern}"
                    disabled="${() => this.props.disabled}"
                    placeholder="${() => this.props.placeholder}"
                    onchange=${() => this.props.changed && this.props.changed(this.value)}
