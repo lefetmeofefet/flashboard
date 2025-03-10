@@ -51,11 +51,10 @@ window.FlutterMessages = {
     signInWithGoogle: function() {
         window.signInWithGoogleIdAndEmail(...arguments)
     },
-    onBtConnected: wallName => {
+    onBtConnectionResult: wallName => {
         btConnectionFinishResolver && btConnectionFinishResolver(wallName)
     },
     onBtDisconnected: () => {
-        btConnectionFinishResolver && btConnectionFinishResolver(null)
         onFlutterBtDisconnect()
     },
     onBtMessage: message => {
