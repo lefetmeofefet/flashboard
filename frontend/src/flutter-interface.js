@@ -25,6 +25,12 @@ async function connectToBoardBluetooth() {
     console.log("Connecting to board bluetooth via app")
     sendMessageToFlutter("CONNECT_TO_BLUETOOTH")
     let wallName = await new Promise(resolve => btConnectionFinishResolver = resolve)
+    if (wallName == null) {
+        throw {
+            fromFlutter: true,
+            message: "Couldn't find wall, check that it's turned on and less than 20m away"
+        }
+    }
     console.log("Finished connecting to board bluetooth via app, wall name: " + wallName)
     return wallName
 }
@@ -49,6 +55,7 @@ window.FlutterMessages = {
         btConnectionFinishResolver && btConnectionFinishResolver(wallName)
     },
     onBtDisconnected: () => {
+        btConnectionFinishResolver && btConnectionFinishResolver(null)
         onFlutterBtDisconnect()
     },
     onBtMessage: message => {
