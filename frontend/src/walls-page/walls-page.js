@@ -172,7 +172,7 @@ createYoffeeElement("walls-page", () => {
 <x-button id="create-wall-button"
           class="big-button"
           onclick=${async () => await createLedlessWall()}>
-    Create wall without leds
+    Create wall without LEDs
     <x-icon icon="fa fa-plus"></x-icon>
 </x-button>
 <x-button id="enter-code-button"

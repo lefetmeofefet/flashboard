@@ -89,6 +89,7 @@ createYoffeeElement("header-bar", (props, self) => {
         font-size: 55px;
         overflow: hidden;
         user-select: none;
+        min-height: 36px;
     }
     
     @media (max-width: 380px) {
@@ -165,6 +166,8 @@ createYoffeeElement("header-bar", (props, self) => {
         color: var(--text-color);
         background-color: var(--background-color); 
         width: max-content;
+        overflow-y: auto;
+        max-height: 80%;
     }
     
     #settings-container {
@@ -194,6 +197,7 @@ createYoffeeElement("header-bar", (props, self) => {
         justify-content: flex-start;
         display: flex;
         align-items: center;
+        min-height: 24px;
     }
     
     #settings-container > .settings-item > x-icon,
@@ -431,6 +435,12 @@ ${() => GlobalState.selectedWall != null && html()`
             Delete wall
         </x-button>
         `}
+        <x-button class="settings-item"
+                  id="delete-wall"
+                  onclick=${() => window.open("https://discord.gg/x5gbeD6hcA", "_blank")}>
+            <x-icon icon="fab fa-discord"></x-icon>
+            Contact Us
+        </x-button>
     </div>
 </x-dialog>
 `

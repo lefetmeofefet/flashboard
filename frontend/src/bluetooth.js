@@ -35,6 +35,13 @@ async function scanAndConnect(onMessageCb, onDisconnectCb) {
         return await Flutter.connectToBoardBluetooth()
     }
 
+    // Check if iphone or for other reason the API is not supported
+    if (navigator.bluetooth?.requestDevice == null) {
+        throw {
+            knownError: "This browser doesn't support bluetooth, please use the app" + (window.isIOS ? ". iPhone app coming soon!" : "")
+        }
+    }
+
     const device = await navigator.bluetooth.requestDevice({
         filters: [{services: [WALL_SERVICE_ID]}],
         optionalServices: [WALL_SERVICE_ID],
@@ -138,7 +145,12 @@ async function connectToWall(secondTry) {
     } catch(e) {
         console.log("Error connecting to BT: ", e)
         console.error(e)
-        if (e.code === 19) {  // Sometimes happens randomly with the message "GATT Server is disconnected. Cannot retrieve services. (Re)connect first with `device.gatt.connect`."
+        if (e.knownError) {
+            throw new Error(e.knownError)
+        } if (e.fromFlutter) {
+            showToast(e.message, {duration: 5000, error: true})
+            throw new Error(`Flutter error connecting to Bluetooth: ${e.message}`)
+        } else if (e.code === 19) {  // Sometimes happens randomly with the message "GATT Server is disconnected. Cannot retrieve services. (Re)connect first with `device.gatt.connect`."
             // Second try is stupid
             // if (!secondTry) {
             //     console.log(`Failed with msg ${e.toString()}, giving it a second try`)
@@ -146,10 +158,9 @@ async function connectToWall(secondTry) {
             // }
             showToast(`Error connecting to Bluetooth, device is probably too far away`, {error: true})
             throw new Error(`Error connecting to Bluetooth: ${e.toString()}`)
-        } else if (e.fromFlutter) {
-            showToast(e.message, {duration: 5000, error: true})
-            throw new Error(`Flutter error connecting to Bluetooth: ${e.message}`)
-        } else if (e.code !== 8) {  // If user pressed "Cancel"
+        } else if (e.code === 8) {
+            // If user pressed "Cancel"
+        } else {
             showToast(`Unknown error connecting to Bluetooth: ${e.toString()}`, {error: true})
             throw new Error(`Unknown error connecting to Bluetooth: ${e.toString()}`)
         }

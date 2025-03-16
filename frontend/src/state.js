@@ -51,6 +51,12 @@ const GlobalState = {
 };
 window.state = GlobalState
 
+function initFilters() {
+    GlobalState.filters = []
+    GlobalState.freeTextFilter = null
+    GlobalState.sorting = SORT_TYPES.NEWEST
+}
+
 function isAdmin() {
     if (GlobalState.selectedWall == null) {
         return
@@ -215,6 +221,7 @@ function onBackClicked() {
             exitRoutePage()
         } else if (GlobalState.selectedWall != null) {
             exitWall()
+            initFilters()
         } else if (Flutter.isInFlutter()) {
             Flutter.exitApp()
         }

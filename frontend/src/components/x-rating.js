@@ -13,6 +13,7 @@ customElements.define("x-rating", class extends YoffeeElement {
                 }
                 
                 #rating {
+                    margin-top: 1px;
                     padding: var(--star-padding, 2px);
                     font-size: var(--font-size, 14px);
                 }

@@ -21,8 +21,8 @@ function getLatestLedId() {
     }
 }
 
-
 createYoffeeElement("edit-wall-page", (props, self) => {
+    let updatingLED = false
     const state = {
         selectedHold: null,
         highlightingLed: GlobalState.autoLeds,
@@ -79,9 +79,14 @@ createYoffeeElement("edit-wall-page", (props, self) => {
             return
         }
         if (state.placingHoldMode) {
+            if (state.selectedHold != null) {
+                await unselectHold(state.selectedHold)
+                state.selectedHold = null
+            }
+
             let {x, y} = self.shadowRoot.querySelector("wall-element").convertPointToWallPosition(e.pageX, e.pageY)
             let newHold = await createHold(x, y)
-            state.placingHoldMode = false
+            // state.placingHoldMode = false
             await toggleHold(newHold)
         }
     }
@@ -110,7 +115,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
             )
             return
         }
-        if (confirm("Delete the selected hold? it would be removed from the wall and all routes containing it")) {
+        if (confirm("Delete the selected hold?")) {
             await Api.deleteHold(hold.id)
             GlobalState.holdMapping.delete(hold.id)
             GlobalState.holds = GlobalState.holds.filter(h => h.id !== hold.id)
@@ -120,33 +125,21 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     }
 
     async function setHoldLedId(hold, ledId) {
-        // if (!GlobalState.bluetoothConnected) {
-        //     try {
-        //         await Bluetooth.connectToWall()
-        //     } catch(e) {}
-        //     if (!GlobalState.bluetoothConnected) {
-        //         alert("You must be connected to the LEDs controller via bluetooth")
-        //         return
-        //     }
-        // }
         if (ledId == null && !confirm("Unlink the LED from the hold? you can reassign any LED later")) {
             return
         }
-
-        await unselectHold(hold)
-        // if (!state.highlightingLed) {
-        //     state.highlightingLed = true
-        // }
-        // await Bluetooth.clearLeds()
-        await Api.setHoldLed(hold.id, ledId)
-        hold.ledId = ledId
-
-        // // To update stupid UI
-        // let selectedHold = state.selectedHold
-        // state.selectedHold = null
-        // state.selectedHold = selectedHold
-
-        await toggleHold(hold)
+        if (updatingLED) {
+            return
+        }
+        updatingLED = true
+        try {
+            await unselectHold(hold)
+            await Api.setHoldLed(hold.id, ledId)
+            hold.ledId = ledId
+            await toggleHold(hold)
+        } finally {
+            updatingLED = false
+        }
     }
 
     async function toggleHighlightingLed() {
@@ -495,14 +488,14 @@ ${() => WallImage == null && html()`
                   }
               }}>
         ${() => state.placingHoldMode ? html()`
-        Cancel
+        Finish
         <x-icon icon="fa fa-times"></x-icon>
         ` : html()`
         Add hold
         <x-icon icon="fa fa-plus"></x-icon>
         `}
-        
     </x-button>
+    
     <x-button id="turn-on-leds-button"
               active=${() => state.highlightingLed}
               onclick=${() => toggleHighlightingLed()}>
