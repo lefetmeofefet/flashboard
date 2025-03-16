@@ -17,12 +17,29 @@ import "./components/x-icon.js"
 import "./components/x-rating.js"
 import "./components/x-checkbox.js"
 import "./components/x-tag.js"
+import {privacyPolicy} from "./privacy-policy/privacy-policy-content.js";
+import {getUrlParams, updateUrlParams} from "../utilz/url-utilz.js";
 
 createYoffeeElement("flashboard-app", (props, self) => {
     let state = {
-
     };
+    window.showPrivacyPolicy = () => {
+        GlobalState.showPrivacyPolicy = true
+        self.shadowRoot.querySelector("#privacy-policy-dialog").open("center")
+        updateUrlParams({privacy: "1"})
+    }
+    window.closePrivacyPolicy = () => {
+        self.shadowRoot.querySelector("#privacy-policy-dialog").close()
+        updateUrlParams({privacy: null})
+    }
 
+    self.onConnect = () => {
+        // If the address is https://flashboard.site/?privacy then open privacy policy yeahhh
+        let urlParams = getUrlParams()
+        if (urlParams.privacy != null) {
+            window.showPrivacyPolicy()
+        }
+    }
 
     return html(GlobalState, state)`
 <style>
@@ -31,6 +48,13 @@ createYoffeeElement("flashboard-app", (props, self) => {
         flex-direction: column;
         height: 100%;
         overflow: hidden;
+    }
+    
+    #privacy-policy-dialog {
+        max-height: 80%;
+        width: 75%;
+        padding: 20px;
+        background-color: white;
     }
 
 </style>
@@ -55,5 +79,23 @@ ${() => {
 ${() => GlobalState.selectedWall != null && html()`
 <footer-bar></footer-bar>
 `}
+
+<x-dialog id="privacy-policy-dialog"
+          onclose=${() => GlobalState.showPrivacyPolicy = false}>
+    <x-button style="position: fixed;
+                     padding: 10px 13px;
+                     box-shadow: none;
+                     color: black;
+                     border-radius: 100px;
+                     right: 20px;
+                     top: 10px;
+                     background-color: #00000010;"
+              onclick=${() => closePrivacyPolicy()}>
+        <x-icon icon="fa fa-times"></x-icon>
+    </x-button>
+    <div style="overflow: auto;">
+        ${() => GlobalState.showPrivacyPolicy && privacyPolicy()}
+    </div>
+</x-dialog>
 `
 });

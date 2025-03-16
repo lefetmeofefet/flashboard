@@ -205,7 +205,9 @@ async function toggleSentRoute(route) {
 }
 
 function onBackClicked() {
-    if (GlobalState.isSnaking) {
+    if (GlobalState.showPrivacyPolicy) {
+        closePrivacyPolicy()
+    } else if (GlobalState.isSnaking) {
         GlobalState.isSnaking = false
         updateUrlParams({snaking: undefined})
     } else {

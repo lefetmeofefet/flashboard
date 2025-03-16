@@ -392,6 +392,12 @@ ${() => GlobalState.selectedWall != null && html()`
             <x-icon icon="fa fa-sign-out-alt" style="transform: rotate(180deg)"></x-icon>
             Sign out
         </x-button>
+        <x-button class="settings-item"
+                  id="privacy-policy"
+                  onclick=${() => showPrivacyPolicy()}>
+            <x-icon icon="fa fa-document"></x-icon>
+            Privacy Policy
+        </x-button>
         `}
         
         ${() => (GlobalState.selectedWall?.macAddress != null && isAdmin()) && html()`
