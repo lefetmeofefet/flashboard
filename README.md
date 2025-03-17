@@ -1,10 +1,11 @@
 
 ## Running the server
-1. Configure environment variables
+1. Install dependencies: `npm install`
+2. Configure environment variables
    1. create a `.env` file and copy the contents of `example.env` into it
    2. edit the variables to fit your env 
-2. Run the server: `npm run backend`
-3. Follow the url in the console print
+3. Run the server: `npm run backend`
+4. Follow the url in the console print
 
 ## Contributing
 You're welcome to send me feature ideas, report bugs, and even make contributions! Join me on the [discord server](https://discord.gg/x5gbeD6hcA).
