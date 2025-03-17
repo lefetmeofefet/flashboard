@@ -96,7 +96,7 @@ ${() => GlobalState.loading ? html()`
         left: 0;
         height: 2px;
         width: 0;
-        background-color: var(--text-color-weak-2);
+        background-color: var(--text-color-weak-1);
         animation: loading 2s infinite;
         margin-bottom: -2px;
         z-index: 1;

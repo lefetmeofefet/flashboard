@@ -216,15 +216,15 @@ function onBackClicked() {
     } else if (GlobalState.isSnaking) {
         GlobalState.isSnaking = false
         updateUrlParams({snaking: undefined})
-    } else {
-        if (GlobalState.selectedRoute != null || GlobalState.configuringHolds) {
-            exitRoutePage()
-        } else if (GlobalState.selectedWall != null) {
-            exitWall()
-            initFilters()
-        } else if (Flutter.isInFlutter()) {
-            Flutter.exitApp()
-        }
+    } else if (GlobalState.inSettingsPage) {
+        GlobalState.inSettingsPage = false
+    } else if (GlobalState.selectedRoute != null || GlobalState.configuringHolds) {
+        exitRoutePage()
+    } else if (GlobalState.selectedWall != null) {
+        exitWall()
+        initFilters()
+    } else if (Flutter.isInFlutter()) {
+        Flutter.exitApp()
     }
 }
 

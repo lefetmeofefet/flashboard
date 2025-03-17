@@ -97,7 +97,7 @@ createYoffeeElement("settings-page", (props, self) => {
 </secondary-header>
 
 <div id="users-list">
-    ${() => GlobalState.selectedWall.users
+    ${() => GlobalState.selectedWall?.users
         .filter(user => user.id !== GlobalState.user.id)
         // .sort((user1, user2) => (user1.isAdmin && !user2.isAdmin) ? -1 : 1)
         .map(user => html(user)`

@@ -1,3 +1,7 @@
+/**
+ * Generated with Termly
+ */
+
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 
 let privacyPolicy = () => {
