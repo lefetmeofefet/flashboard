@@ -258,6 +258,8 @@ function getLedRGB(isOn, holdType) {
     if (isOn) {
         if (holdType === "start") {
             return {r: 0, g: 255, b: 0}
+        } else if (holdType === "foot") {
+            return {r: 200, g: 0, b: 200}
         } else if (holdType === "finish") {
             return {r: 255, g: 0, b: 0}
         }
@@ -269,13 +271,17 @@ function getLedRGB(isOn, holdType) {
 async function highlightRoute(route) {
     let normalLedGroup = getLedRGB(true)
     let startLedGroup = getLedRGB(true, "start")
+    let footLedGroup = getLedRGB(true, "foot")
     let finishLedGroup = getLedRGB(true, "finish")
     normalLedGroup.i = []
     startLedGroup.i = []
+    footLedGroup.i = []
     finishLedGroup.i = []
     for (let hold of route.holds.filter(h => h.ledId != null)) {
         if (hold.holdType === "start") {
             startLedGroup.i.push(hold.ledId)
+        } else if (hold.holdType === "foot") {
+            footLedGroup.i.push(hold.ledId)
         } else if (hold.holdType === "finish") {
             finishLedGroup.i.push(hold.ledId)
         } else {
@@ -284,7 +290,7 @@ async function highlightRoute(route) {
     }
     await sendBTMessage({
         command: "setLeds",
-        leds: [normalLedGroup, startLedGroup, finishLedGroup].filter(ledGroup => ledGroup.i.length > 0)
+        leds: [normalLedGroup, startLedGroup, footLedGroup, finishLedGroup].filter(ledGroup => ledGroup.i.length > 0)
     })
 }
 

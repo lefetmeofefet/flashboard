@@ -19,9 +19,11 @@ import "./components/x-checkbox.js"
 import "./components/x-tag.js"
 import {privacyPolicy} from "./privacy-policy/privacy-policy-content.js";
 import {getUrlParams, updateUrlParams} from "../utilz/url-utilz.js";
+import {Flutter} from "./flutter-interface.js";
 
 createYoffeeElement("flashboard-app", (props, self) => {
     let state = {
+        showAppLinks: localStorage.getItem("no-app-store-links") == null
     };
     window.showPrivacyPolicy = () => {
         GlobalState.showPrivacyPolicy = true
@@ -56,8 +58,48 @@ createYoffeeElement("flashboard-app", (props, self) => {
         padding: 20px;
         background-color: white;
     }
+    
+    #app-store-links {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        background-color: var(--secondary-color);
+        padding: 12px 0;
+        align-items: center
+    }
+    
+    #app-store-links > img {
+        height: 50px;
+        cursor: pointer;
+    }
+    
+    #app-store-links > #cancel-button {
+        background-color: #00000020;
+        position: fixed;
+        right: 10px;
+        margin-left: auto;
+        padding: 5px;
+        box-shadow: none;
+        border-radius: 100px;
+        width: 20px;
+        height: 20px;
+    }
 
 </style>
+
+${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() && html()`
+<div id="app-store-links">
+    <img src="../res/images/GetItOnGooglePlay_button.png" onclick=${() => window.open("https://play.google.com/store/apps/details?id=flashboard.site.flashboard", "_blank")}/>
+    <x-button id="cancel-button" 
+              onclick=${() => {
+                  localStorage.setItem("no-app-store-links", "true")
+                  state.showAppLinks = false
+              }}>
+        <x-icon icon="fa fa-times"></x-icon>
+    </x-button>
+</div>
+`}
+
 ${() => {
     if (GlobalState.user == null) {
         return html()`<login-page></login-page>`

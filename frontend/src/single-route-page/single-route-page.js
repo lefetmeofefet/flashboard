@@ -102,6 +102,8 @@ createYoffeeElement("single-route-page", (props, self) => {
                     } else if (hold.holdType === "start") {
                         hold.holdType = "finish"
                     } else if (hold.holdType === "finish") {
+                        hold.holdType = "foot"
+                    } else if (hold.holdType === "foot") {
                         hold.holdType = ""
                         hold.inRoute = false
                     }

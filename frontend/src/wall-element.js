@@ -132,7 +132,7 @@ createYoffeeElement("wall-element", (props, self) => {
         border: 1px solid #ffffff50;
     }
     
-    #holds-container > .hold:is([data-hold-type=hold], [data-hold-type=start], [data-hold-type=finish]) {
+    #holds-container > .hold:is([data-hold-type=hold], [data-hold-type=start], [data-hold-type=finish], [data-hold-type=foot]) {
         width: 34px;
         height: 34px;
         background-color: transparent;
@@ -145,6 +145,10 @@ createYoffeeElement("wall-element", (props, self) => {
     
     #holds-container > .hold[data-hold-type=start] {
         border-color: #20ff30;
+    }
+    
+    #holds-container > .hold[data-hold-type=foot] {
+        border-color: #ee20ee;
     }
     
     #holds-container > .hold[data-hold-type=finish] {
