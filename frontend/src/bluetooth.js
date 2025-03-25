@@ -146,6 +146,7 @@ async function connectToWall(secondTry) {
         console.log("Error connecting to BT: ", e)
         console.error(e)
         if (e.knownError) {
+            showToast(e.knownError, {duration: 5000, error: true})
             throw new Error(e.knownError)
         } if (e.fromFlutter) {
             showToast(e.message, {duration: 5000, error: true})
@@ -156,7 +157,7 @@ async function connectToWall(secondTry) {
             //     console.log(`Failed with msg ${e.toString()}, giving it a second try`)
             //     return await connectToWall(true)
             // }
-            showToast(`Error connecting to Bluetooth, device is probably too far away`, {error: true})
+            showToast(`Error connecting to Bluetooth, device is probably too far away or there are already 3 devices connected`, {error: true, duration: 10000})
             throw new Error(`Error connecting to Bluetooth: ${e.toString()}`)
         } else if (e.code === 8) {
             // If user pressed "Cancel"

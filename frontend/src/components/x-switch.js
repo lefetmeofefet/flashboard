@@ -55,10 +55,17 @@ customElements.define("x-switch", class extends YoffeeElement {
                     margin-right: var(--circle-margin);
                     margin-left: auto;
                     left: calc(var(--circle-margin) * 3 + var(--circle-size));
+                    background-color: var(--text-color-weak-1);
                 }
 
-                #switch-container[is-on] {
+                /*#circle:not([is-on]) {*/
+                /*    background-color: var(--text-color-weak-3);*/
+                /*}*/
+                #switch-container {
                     background-color: var(--text-color-weak-3);
+                }
+                #switch-container[is-on] {
+                    background-color: var(--secondary-color);
                 }
             </style>
 

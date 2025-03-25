@@ -87,7 +87,7 @@ createYoffeeElement("flashboard-app", (props, self) => {
 
 </style>
 
-${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() && html()`
+${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() ? html()`
 <div id="app-store-links">
     <img src="../res/images/GetItOnGooglePlay_button.png" onclick=${() => window.open("https://play.google.com/store/apps/details?id=flashboard.site.flashboard", "_blank")}/>
     <x-button id="cancel-button" 
@@ -98,7 +98,7 @@ ${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() && html(
         <x-icon icon="fa fa-times"></x-icon>
     </x-button>
 </div>
-`}
+` : ""}
 
 ${() => {
     if (GlobalState.user == null) {

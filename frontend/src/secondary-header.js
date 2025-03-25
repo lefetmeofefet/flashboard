@@ -98,6 +98,11 @@ ${() => GlobalState.loading ? html()`
         width: 0;
         background-color: var(--text-color-weak-1);
         animation: loading 2s infinite;
+        animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -moz-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -o-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -webkit-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        visibility: ${() => GlobalState.loading ? "visible" : "hidden"};
         margin-bottom: -2px;
         z-index: 1;
     }
@@ -108,7 +113,7 @@ ${() => GlobalState.loading ? html()`
         100% { width: 0; margin-left: 100%; }
     }
 </style>
-` : ""}
+` : html()`<style>:host::after { content: none !important; }</style>`}
 
 <div id="top-row">
     ${() => !props.hidebackbutton && !props.showconfirmbutton && !props.showxbutton && html()`

@@ -231,6 +231,11 @@ ${() => GlobalState.loading ? html()`
         width: 0;
         background-color: var(--secondary-color);
         animation: loading 2s infinite;
+        animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -moz-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -o-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        -webkit-animation-play-state: ${() => GlobalState.loading ? "running" : "paused"};
+        visibility: ${() => GlobalState.loading ? "visible" : "hidden"};
     }
     
     @keyframes loading {
@@ -239,7 +244,7 @@ ${() => GlobalState.loading ? html()`
         100% { width: 0; margin-left: 100%; }
     }
 </style>
-` : ""}
+` : html()`<style>:host::after { content: none !important; }</style>`}
 
 ${() => {
     let element = state.searchMode ? html()`

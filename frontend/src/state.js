@@ -135,7 +135,8 @@ async function enterConfigureHoldsPage() {
     GlobalState.configuringHolds = true
     updateUrlParams({configuring: true})  // Important so that clicking "back" won't exit the site
 
-    if (GlobalState.holds.length > 0) {
+    if (GlobalState.holds.length > 0 && !localStorage.getItem("drag-holds-toasted")) {
+        localStorage.setItem("drag-holds-toasted", "true")
         showToast("Holds are draggable now!", {position: "bottom"})
     }
 

@@ -457,8 +457,8 @@ createYoffeeElement("single-route-page", (props, self) => {
               onclick=${async () => {
                   if (GlobalState.user.id === setterId() || isAdmin()) {
                       state.editMode = true
-                      if (!localStorage.getItem("edit_holds_toasted")) {
-                          localStorage.setItem("edit_holds_toasted", "true")
+                      if (!localStorage.getItem("edit-holds-toasted")) {
+                          localStorage.setItem("edit-holds-toasted", "true")
                           showToast("Click holds to edit the route, long press to remove hold")
                       }
                   } else {
