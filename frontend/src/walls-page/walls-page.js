@@ -131,6 +131,7 @@ createYoffeeElement("walls-page", () => {
         margin-top: 20px;
         border-radius: 1000px;
         height: 30px;
+        min-height: 30px;
         gap: 10px;
         width: auto;
         max-width: 400px;

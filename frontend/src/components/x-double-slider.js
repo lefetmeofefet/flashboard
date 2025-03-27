@@ -10,8 +10,10 @@ createYoffeeElement("x-double-slider", class extends YoffeeElement {
 
         window.addEventListener('pointerup', (event) => {
             if (this.isSliding) {
-                this.isSliding = false;
                 this.props.released && this.props.released(this.getValue())
+                // event.preventDefault();
+                // requestAnimationFrame(() => this.updateCircleLocation(event))
+                this.isSliding = false;
             }
         })
 
@@ -39,6 +41,28 @@ createYoffeeElement("x-double-slider", class extends YoffeeElement {
             });
             resizeObserver.observe(this);
         }
+
+        this.addEventListener("pointerdown", e => {
+            console.log("I been clicked")
+            let circles = this.circles
+            let closerCircle
+            if (Math.abs(circles[0].offsetLeft + 12.5 - e.offsetX) < Math.abs(circles[1].offsetLeft + 12.5 - e.offsetX)) {
+                closerCircle = circles[0]
+            } else {
+                closerCircle = circles[1]
+            }
+            this.currentCircle = closerCircle
+            this.isSliding = true
+            // this.startX = this.currentCircle.offsetLeft - 12.5
+            this.startX = 0
+
+            // this.updateCircleLocation(e)
+            // this.currentCircle.dispatchEvent(new PointerEvent("pointerdown"));
+            // this.currentCircle.offsetLeft = e.offsetX - 12.5
+            // this.currentCircle.click()
+            e.stopPropagation()
+            e.preventDefault()
+        })
     }
 
     limitMin() {
@@ -195,8 +219,24 @@ createYoffeeElement("x-double-slider", class extends YoffeeElement {
                           this.currentCircle = null
                       }}
             ></x-button>
-            
-            <div id="line"></div>
+            <div id="line" 
+                 onclick=${e => {
+                     return
+                     console.log("I been clicked")
+                     let circles = this.circles
+                     let closerCircle
+                     if (Math.abs(circles[0].offsetX - e.offsetX) < Math.abs(circles[1].offsetX - e.offsetX)) {
+                         closerCircle = circles[0]
+                     } else {
+                         closerCircle = circles[1]
+                     }
+                     this.currentCircle = closerCircle
+                     this.isSliding = true
+                     this.startX = e.offsetX - 12.5
+                     e.stopPropagation()
+                     e.preventDefault()
+                 }}
+            ></div>
             
         `
     }

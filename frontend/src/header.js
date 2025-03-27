@@ -90,6 +90,7 @@ createYoffeeElement("header-bar", (props, self) => {
         overflow: hidden;
         user-select: none;
         min-height: 36px;
+        white-space: nowrap;
     }
     
     @media (max-width: 380px) {
@@ -182,6 +183,7 @@ createYoffeeElement("header-bar", (props, self) => {
         padding: 10px;
         align-self: center;
         align-items: center;
+        white-space: nowrap;
     }
     
     #settings-container > #title > #edit-nickname-button {
