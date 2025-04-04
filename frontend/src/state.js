@@ -96,7 +96,11 @@ async function loadRoutesAndHolds(includeWallInfo, wallId) {
             response.wallInfo.starredRoutes[starredRoute.routeId] = starredRoute.stars
         }
 
+        if (response.wallInfo.defaultHoldDiameter == null) {
+            response.wallInfo.defaultHoldDiameter = 6
+        }
         GlobalState.selectedWall = response.wallInfo
+        GlobalState.defaultHoldDiameter = GlobalState.selectedWall.defaultHoldDiameter
     }
 
     let lists = new Set()
@@ -120,6 +124,15 @@ async function loadRoutesAndHolds(includeWallInfo, wallId) {
     }
 }
 
+async function setDefaultHoldDiameter(holdDiameter) {
+    if (holdDiameter !== GlobalState.defaultHoldDiameter) {
+        GlobalState.selectedWall.defaultHoldDiameter = holdDiameter
+        GlobalState.defaultHoldDiameter = holdDiameter
+        GlobalState.holds.forEach(h => h.diameter = GlobalState.selectedWall.defaultHoldDiameter)
+        await Api.setWallDefaultHoldDiameter(holdDiameter)
+    }
+}
+
 /** @param route {Route} */
 async function enterRoutePage(route) {
     GlobalState.selectedRoute = route
@@ -134,11 +147,6 @@ async function enterConfigureHoldsPage() {
 
     GlobalState.configuringHolds = true
     updateUrlParams({configuring: true})  // Important so that clicking "back" won't exit the site
-
-    if (GlobalState.holds.length > 0 && !localStorage.getItem("drag-holds-toasted")) {
-        localStorage.setItem("drag-holds-toasted", "true")
-        showToast("Holds are draggable now!", {position: "bottom"})
-    }
 
     if (GlobalState.bluetoothConnected) {
         await Bluetooth.clearLeds()
@@ -278,5 +286,6 @@ export {
     onBackClicked,
     isAdmin,
     sortRoutes,
-    isInRoutesPage
+    isInRoutesPage,
+    setDefaultHoldDiameter
 }

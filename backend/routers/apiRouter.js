@@ -27,7 +27,7 @@ import {
     deleteWall,
     setHoldLed,
     setWallAdmin,
-    getRouteSenders
+    getRouteSenders, setWallDefaultHoldDiameter
 } from "../db.js";
 import express from "express";
 
@@ -106,10 +106,15 @@ router.post('/setWallName', async (req, res) => {
     res.json({status: 'success'})
 })
 
-
 router.post('/setWallBrightness', async (req, res) => {
     const {wallId, brightness} = req.body
     await setWallBrightness(wallId, brightness)
+    res.json({status: 'success'})
+})
+
+router.post('/setWallDefaultHoldDiameter', async (req, res) => {
+    const {wallId, diameter} = req.body
+    await setWallDefaultHoldDiameter(wallId, diameter)
     res.json({status: 'success'})
 })
 

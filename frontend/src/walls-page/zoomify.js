@@ -1,20 +1,33 @@
 
 function zoomify(element, {
     parent = null,
+    stretchToParent = false,
     wheelZoomSpeed = 0.005,
     minZoom = 1,
     maxZoom = 5,
-    onZoom = null
+    onZoom = null,
+    onDrag = null,
+    onInteraction = null,
+    numFingersChanged = null,
+    onBorderSwipe = null
 } = {}) {
+    element.style.transformOrigin = "0 0"
+    // Transition to make it smoother, but it feels slow...
+    // element.style.transition = "transform 0.05s"
+
     let zoom = 1, x = 0, y = 0
 
     element.cover = () => {
         zoom = Math.max(parent.offsetWidth / element.offsetWidth, parent.offsetHeight / element.offsetHeight)
+        x = 0
+        y = 0
         updatePositionAndZoom()
     }
 
     element.contain = () => {
         zoom = 1
+        x = 0
+        y = 0
         updatePositionAndZoom()
     }
 
@@ -25,9 +38,23 @@ function zoomify(element, {
         updatePositionAndZoom()
     }
 
-    element.style.transformOrigin = "0 0"
-    // Transition to make it smoother, but it feels slow...
-    // element.style.transition = "transform 0.05s"
+    let xStretch = 1, yStretch = 1
+    let hZoom = () => zoom * xStretch
+    let vZoom = () => zoom * yStretch
+
+    element.stretchToParent = () => {
+        xStretch = parent.offsetWidth / element.offsetWidth
+        yStretch = parent.offsetHeight / element.offsetHeight
+        updatePositionAndZoom()
+    }
+    element.unStretchToParent = () => {
+        xStretch = 1
+        yStretch = 1
+        updatePositionAndZoom()
+    }
+    if (stretchToParent) {
+        element.stretchToParent()
+    }
 
     // PC wheel zooming
     element.addEventListener("wheel", (event) => {
@@ -42,11 +69,18 @@ function zoomify(element, {
     })
 
     let updatePositionAndZoom = () => {
+        if (zoom < minZoom) {
+            zoom = minZoom
+        }
+        if (zoom > maxZoom) {
+            zoom = maxZoom
+        }
+
         // Limit scrolling by parent
         if (parent != null) {
-            let elementWidth = element.offsetWidth * zoom
+            let elementWidth = element.offsetWidth * hZoom()
             let elementX = element.offsetLeft + x
-            let elementHeight = element.offsetHeight * zoom
+            let elementHeight = element.offsetHeight * vZoom()
             let elementY = element.offsetTop + y
 
             // If dimension is smaller than parent, then don't allow scrolling at all
@@ -82,7 +116,15 @@ function zoomify(element, {
             }
         }
 
-        let transform = `translate(${x}px, ${y}px) scale(${zoom})`
+        let hzoom = hZoom()
+        let vzoom = vZoom()
+        if (hzoom === 1) {
+            hzoom = 1.00001 // strange hack fix for subpixel shift when zooming out, selecting hold, zooming in, selecting hold again and stuff jumps
+        }
+        if (vzoom === 1) {
+            vzoom = 1.00001
+        }
+        let transform = `translate(${x}px, ${y}px) scale(${hzoom}, ${vzoom})`
         element.style.webkitTransform = transform
         element.style.mozTransform = transform
         element.style.msTransform = transform
@@ -115,14 +157,21 @@ function zoomify(element, {
 
     // Receives parameters in screen coordinates!
     let dragAndZoom = (oldDragPoint, newDragPoint, initialTranslatePoint, oldZoom, newZoom) => {
+        onInteraction && onInteraction()
+
         if (newZoom < minZoom) {
             newZoom = minZoom
         }
         if (newZoom > maxZoom) {
             newZoom = maxZoom
         }
-        x = newDragPoint.x - ((oldDragPoint.x - initialTranslatePoint.x) / oldZoom) * newZoom
-        y = newDragPoint.y - ((oldDragPoint.y - initialTranslatePoint.y) / oldZoom) * newZoom
+        let newX = newDragPoint.x - ((oldDragPoint.x - initialTranslatePoint.x) / (oldZoom * xStretch)) * (newZoom * xStretch)
+        let newY = newDragPoint.y - ((oldDragPoint.y - initialTranslatePoint.y) / (oldZoom * yStretch)) * (newZoom * yStretch)
+        if (x !== newX || y !== newY) {
+            onDrag && onDrag()
+        }
+        x = newX
+        y = newY
         if (zoom !== newZoom) {
             onZoom && onZoom()
             zoom = newZoom
@@ -137,18 +186,29 @@ function zoomify(element, {
             newZoom = startZoom * newPinchDistance / oldPinchDistance
         }
         dragAndZoom(oldMiddlePoint, newMiddlePoint, {x: startX, y: startY}, startZoom, newZoom)
+
+        // If nothing changed even though we panned, we'll call "onBorderSwipe"
+        if (borderSwiping && startX === x && startY === y && startZoom === zoom) {
+            onBorderSwipe && onBorderSwipe({
+                x: newMiddlePoint.x - oldMiddlePoint.x,
+                y: newMiddlePoint.y - oldMiddlePoint.y
+            })
+        } else {
+            borderSwiping = false
+        }
     }
 
     let navigating = false
     let touches = []
     // All these have to be in image coordinates
-    let touchMiddlePoint, pinchDistance, startX, startY, startZoom
+    let touchMiddlePoint, pinchDistance, startX, startY, startZoom, borderSwiping
 
     let initPinchDrag = () => {
         touchMiddlePoint = getMiddlePoint(touches)
         pinchDistance = getAvgDistance(touches, touchMiddlePoint)
         startX = x
         startY = y
+        borderSwiping = true
         startZoom = zoom
         navigating = true
     }
@@ -156,6 +216,7 @@ function zoomify(element, {
     element.addEventListener('touchstart', function (event) {
         touches = event.touches
         initPinchDrag()
+        numFingersChanged && numFingersChanged(event.touches.length)
     }, { passive: false })
 
     element.addEventListener('touchmove', function (event) {
@@ -175,6 +236,7 @@ function zoomify(element, {
         } else {
             initPinchDrag()
         }
+        numFingersChanged && numFingersChanged(event.touches.length)
     })
 
     // Initial update

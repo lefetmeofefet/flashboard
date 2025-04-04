@@ -164,6 +164,7 @@ async function getWallInfo(wallId, userId) {
            wall.name as name,
            wall.brightness as brightness,
            wall.createdAt as createdAt,
+           wall.defaultHoldDiameter as defaultHoldDiameter,
            sentRouteIds as sentRouteIds,
            likedRouteIds as likedRouteIds,
            starredRoutes as starredRoutes,
@@ -190,6 +191,13 @@ async function setWallBrightness(wallId, brightness) {
     MATCH (wall:Wall{id: $wallId})
     SET wall.brightness = $brightness
     `, {wallId, brightness})
+}
+
+async function setWallDefaultHoldDiameter(wallId, diameter) {
+    return await queryNeo4jSingleResult(`
+    MATCH (wall:Wall{id: $wallId})
+    SET wall.defaultHoldDiameter = $diameter
+    `, {wallId, diameter})
 }
 
 async function setWallAdmin(wallId, userId, isAdmin) {
@@ -508,6 +516,7 @@ export {
     setWallImage,
     setWallName,
     setWallBrightness,
+    setWallDefaultHoldDiameter,
     createUser,
     getUserById,
     getUserByEmail,

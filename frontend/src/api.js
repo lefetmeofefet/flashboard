@@ -152,6 +152,13 @@ async function setWallBrightness(brightness) {
     })
 }
 
+async function setWallDefaultHoldDiameter(diameter) {
+    return await post("/api/setWallDefaultHoldDiameter", {
+        wallId: GlobalState.selectedWall.id,
+        diameter
+    })
+}
+
 async function createRoute() {
     return await post("/api/createRoute", {
         wallId: GlobalState.selectedWall.id,
@@ -235,6 +242,7 @@ const Api = {
     setWallImage,
     setWallName,
     setWallBrightness,
+    setWallDefaultHoldDiameter,
     createRoute,
     updateRoute,
     updateSentStatus,

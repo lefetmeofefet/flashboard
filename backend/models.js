@@ -1,7 +1,7 @@
 
 
 class Wall {
-    constructor(id, name, brightness, image, likedRouteIds, sentRouteIds, starredRoutes, users, createdAt) {
+    constructor(id, name, brightness, image, likedRouteIds, sentRouteIds, starredRoutes, users, createdAt, defaultHoldDiameter) {
         this.id = id
         this.name = name
         this.brightness = brightness
@@ -16,6 +16,7 @@ class Wall {
         /** @type {User[]} */
         this.users = users
         this.createdAt = createdAt
+        this.defaultHoldDiameter = defaultHoldDiameter
     }
 
     fromDb(dbObject) {

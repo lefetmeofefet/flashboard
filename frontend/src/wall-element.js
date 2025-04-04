@@ -14,13 +14,15 @@ const IMAGE_MODES = {
 createYoffeeElement("wall-element", (props, self) => {
     let state = {
         imageMode: localStorage.getItem("wall-image-mode") || IMAGE_MODES.CONTAIN,
+        showHolds: false,
     }
 
     // Dragging
     let clickedHold
     let dragging = false
+    let panning = false
     let dragStartPosition
-    let dragContainer
+    let holdsElement
     let longPressTimer
     let isAfterLongPress = false
     const MIN_DISTANCE_FOR_DRAG = 8
@@ -29,7 +31,6 @@ createYoffeeElement("wall-element", (props, self) => {
     let containerElement
     let imageElement
     self.onConnect = () => {
-        dragContainer = self.shadowRoot.querySelector("#holds")
         containerElement = self.shadowRoot.querySelector("#container")
         imageElement = self.shadowRoot.querySelector("#image")
         imageElement.style.opacity = "0"
@@ -43,17 +44,45 @@ createYoffeeElement("wall-element", (props, self) => {
                 setImageMode(state.imageMode)
             }
             imageElement.style.opacity = "1"
+            state.showHolds = true
+            holdsElement = self.shadowRoot.querySelector("#holds")
         }
         imageElement.src = WallImage
 
+        const zoomControlButton = self.shadowRoot.querySelector("x-button#zoom-control-button")
+        let hideTimeout
+
+        self.showZoomControlButton = () => {
+            // Make zoom control button disappear and appear when panning / zooming
+            zoomControlButton.classList.add("show");
+            clearTimeout(hideTimeout)
+            hideTimeout = setTimeout(() => {
+                zoomControlButton.classList.remove("show")
+            }, 3000)
+        }
+
+        let lastNumFingers = 0
         zoomify(
             containerElement,
             {
                 parent: self,
                 onZoom: () => {
                     if (state.imageMode === IMAGE_MODES.COVER) {
-                        setImageMode(IMAGE_MODES.CONTAIN)
+                        state.imageMode = IMAGE_MODES.CONTAIN
                     }
+                },
+                onInteraction: () => {
+                    self.showZoomControlButton()
+                },
+                numFingersChanged: numFingers => {
+                    panning = numFingers > 1 || (numFingers === 1 && lastNumFingers > 1)
+                    lastNumFingers = numFingers
+                    if (panning) {
+                        clearTimeout(longPressTimer)
+                    }
+                },
+                onBorderSwipe: borderSwipe => {
+                    console.log("Borderswipe: ", borderSwipe.x)
                 }
             }
         )
@@ -64,11 +93,13 @@ createYoffeeElement("wall-element", (props, self) => {
 
         if (clickedHold != null) {
             if (dragging) {
-                self.dispatchEvent(new CustomEvent('dragholdfinish', {
-                    detail: {
-                        hold: clickedHold
-                    }
-                }))
+                if (props.draggingholds) {
+                    self.dispatchEvent(new CustomEvent('dragholdfinish', {
+                        detail: {
+                            hold: clickedHold
+                        }
+                    }))
+                }
             } else {
                 await holdClicked(clickedHold)
             }
@@ -88,15 +119,18 @@ createYoffeeElement("wall-element", (props, self) => {
         ) >= MIN_DISTANCE_FOR_DRAG
     }
 
-    self.convertPointToWallPosition = (dragContainerX, dragContainerY) => {
-        let {x, y, width, height} = dragContainer.getBoundingClientRect()
+    self.convertPointToWallPosition = (pageX, pageY) => {
+        let {x, y, width, height} = holdsElement.getBoundingClientRect()
         return {
-            x: bound((dragContainerX - x) / width),
-            y: bound((height - dragContainerY + y) / height)
+            x: bound((pageX - x) / width),
+            y: bound((height - pageY + y) / height)
         }
     }
 
     self.shadowRoot.addEventListener('pointermove', (event) => {
+        if (panning) {
+            return
+        }
         if (clickedHold != null) {
             if (!dragging && isDistanceEnoughForDragging(event.pageX, event.pageY)) {
                 // We wait to make the click be dismissed because of dragging=true
@@ -106,18 +140,23 @@ createYoffeeElement("wall-element", (props, self) => {
             if (dragging) {
                 event.preventDefault();
                 let {x, y} = self.convertPointToWallPosition(event.pageX, event.pageY)
-                self.dispatchEvent(new CustomEvent('draghold', {
-                    detail: {
-                        hold: clickedHold,
-                        x,
-                        y
-                    }
-                }))
+                if (props.draggingholds) {
+                    self.dispatchEvent(new CustomEvent('draghold', {
+                        detail: {
+                            hold: clickedHold,
+                            x,
+                            y
+                        }
+                    }))
+                }
             }
         }
     })
 
     const holdClicked = async hold => {
+        if (panning) {
+            return
+        }
         console.log("normal click")
         if (isAfterLongPress) {
             // When releasing after long press we don't want a normal click to be registered
@@ -129,6 +168,9 @@ createYoffeeElement("wall-element", (props, self) => {
     }
 
     const holdLongPressed = async hold => {
+        if (panning) {
+            return
+        }
         console.log("long press")
         isAfterLongPress = true
         self.dispatchEvent(new CustomEvent('clickhold', {detail: {hold, long: true}}))
@@ -143,14 +185,12 @@ createYoffeeElement("wall-element", (props, self) => {
             containerElement.cover()
         } else if (mode === IMAGE_MODES.STRETCH) {
             containerElement.reset()
-            imageElement.style.width = "100vw"
-            imageElement.style.height = "100%"
-            containerElement.style.height = "100%"
+            containerElement.stretchToParent()
         }
     }
 
     const filterTouchEvent = e => {
-        if (props.showallholds) {
+        if (props.draggingholds) {
             e.stopPropagation()
             e.preventDefault()
         }
@@ -161,12 +201,13 @@ createYoffeeElement("wall-element", (props, self) => {
     :host {
         display: flex;
         height: inherit;
-        /*position: relative;*/
+        /*position: relative; !* fuck up the offsetTop of elements *! */
         flex: 1;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        overflow: auto;
+        /*overflow: auto;  !* for some reason, important for not jittering the display wtf *! */
+        overflow: hidden;
     }
     
     #container {
@@ -175,6 +216,7 @@ createYoffeeElement("wall-element", (props, self) => {
         overflow: hidden; /* for iphone shit */
         width: fit-content;
         height: fit-content;
+        will-change: transform; /* important for panning performance! */ 
     }
     
     #image {
@@ -191,20 +233,15 @@ createYoffeeElement("wall-element", (props, self) => {
     
     #holds > .hold {
         position: absolute;
-        width: 26px;
-        height: 26px;
         background-color: #00000040;
         border-radius: 100px;
         color: var(--text-color-on-secondary);
-        transform: translate(-50%, 50%);
-        /*opacity: 0.6;*/
+        transform: translate3d(-50%, 50%, 0);
         border: 3px solid transparent;
         border: 1px solid #ffffff50;
     }
     
-    #holds > .hold:is([data-hold-type=hold], [data-hold-type=start], [data-hold-type=finish], [data-hold-type=foot]) {
-        width: 34px;
-        height: 34px;
+    #holds > .hold:is(:not([data-hold-type=none])) {
         background-color: transparent;
         border-width: 3px;
     }
@@ -235,11 +272,22 @@ createYoffeeElement("wall-element", (props, self) => {
         min-width: 10px;
         bottom: 115px;
         right: 30px;
+        
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 1s ease-out, visibility 0s linear 1s;
+    }
+      
+    x-button#zoom-control-button.show {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.2s ease-in, visibility 0s;
     }
 </style>
 
 <div id="container">
     <img id="image"/>
+    ${() => state.showHolds ? html()`
     <div id="holds"
          oncontextmenu = ${e => {
             e.preventDefault()
@@ -247,15 +295,20 @@ createYoffeeElement("wall-element", (props, self) => {
             e.stopImmediatePropagation()
         }}>
         ${() => GlobalState.holds
-            .filter(hold => props.showallholds || hold.inRoute)
-            .map(hold => html(hold)`
+        .filter(hold => props.showallholds || hold.inRoute)
+        .map(hold => html(hold)`
         <div class="hold"
-             data-hold-type=${() => hold.inRoute ? (hold.holdType === "" ? "hold" : hold.holdType) : ""}
+             data-hold-type=${() => hold.inRoute ? (hold.holdType === "" ? "hold" : hold.holdType) : "none"}
              style="${() => `
-                left: ${hold.x * 100}%; 
-                bottom: ${hold.y * 100}%; 
+                left: ${hold.x * 100}%;
+                bottom: ${hold.y * 100}%;
+                width: ${(hold.diameter || GlobalState.defaultHoldDiameter) * (imageElement?.width / 100) * (hold.inRoute ? 1.2 : 1)}px;
+                height: ${(hold.diameter || GlobalState.defaultHoldDiameter) * (imageElement?.width / 100) * (hold.inRoute ? 1.2 : 1)}px;
                 `}"
              onpointerdown=${e => {
+                if (panning) {
+                    return
+                }
                 clickedHold = hold
                 dragStartPosition = {x: e.pageX, y: e.pageY}
                 e.stopPropagation()
@@ -269,6 +322,7 @@ createYoffeeElement("wall-element", (props, self) => {
         </div>
         `)}
     </div>
+    ` : ""}
 </div>
 <x-button id="zoom-control-button"
           onclick=${() => {
@@ -277,12 +331,10 @@ createYoffeeElement("wall-element", (props, self) => {
                 } else if (state.imageMode === IMAGE_MODES.COVER) {
                     setImageMode(IMAGE_MODES.STRETCH)
                 } else if (state.imageMode === IMAGE_MODES.STRETCH) {
-                    // Stop the stretch
-                    imageElement.style.width = null
-                    imageElement.style.height = null
-                    containerElement.style.height = "fit-content"
+                    containerElement.unStretchToParent()
                     setImageMode(IMAGE_MODES.CONTAIN)
                 }
+                self.showZoomControlButton()
     }}>
     <x-icon icon=${() => state.imageMode === IMAGE_MODES.CONTAIN ? "fa fa-expand" : 
         (state.imageMode === IMAGE_MODES.COVER ? "fa fa-arrows-alt" : "fa fa-compress")}></x-icon>
