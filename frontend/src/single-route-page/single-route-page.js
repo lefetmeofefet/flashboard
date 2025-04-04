@@ -524,8 +524,15 @@ createYoffeeElement("single-route-page", (props, self) => {
         }}>
             <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
             Delete route
-        </x-button>`}
-        `
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${async () => {
+            console.log("date pressed hmm?")
+        }}>
+            <x-icon icon="fa fa-clock" style="width: 20px;"></x-icon>
+            Created ${() => dayjs(GlobalState.selectedRoute.createdAt).format('DD-MM-YY HH:mm:ss')}
+        </x-button>
+        `}`
     }
 
     function renderEditLists() {
