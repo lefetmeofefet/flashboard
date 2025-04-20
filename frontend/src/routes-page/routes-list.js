@@ -2,7 +2,7 @@ import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {
     GlobalState,
     enterRoutePage,
-    toggleLikeRoute
+    toggleLikeRoute, setFilteredRoutes, getFilteredRoutes
 } from "../state.js";
 import "../components/text-input.js"
 import "../components/x-loader.js"
@@ -134,15 +134,15 @@ createYoffeeElement("routes-list", (props, self) => {
 </style>
 
 ${() => {
-    let filteredRoutes = getFilteredRoutes()
-        .filter((_, index) => index < state.numRoutesToShow)
-        if (filteredRoutes.length === 0) {
-            if (GlobalState.holds.length === 0) {
-                return null
-            }
-            return html()`<div id="no-routes">No routes</div>`
+    let filteredRoutes = filterRoutes()
+    if (filteredRoutes.length === 0) {
+        if (GlobalState.holds.length === 0) {
+            return null
         }
-        return filteredRoutes
+        return html()`<div id="no-routes">No routes</div>`
+    }
+    setFilteredRoutes(filteredRoutes)
+    return filteredRoutes.filter((_, index) => index < state.numRoutesToShow)
             .map(route => html(route)`
 <x-button class="route" 
           onclick=${() => !GlobalState.loading && enterRoutePage(route)}
@@ -167,7 +167,7 @@ ${() => {
 `
 })
 
-function getFilteredRoutes() {
+function filterRoutes() {
     return GlobalState.routes.filter(route => {
         for (let filter of GlobalState.filters) {
             if (filter.type === FILTER_TYPES.GRADE) {

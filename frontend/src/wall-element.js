@@ -82,7 +82,16 @@ createYoffeeElement("wall-element", (props, self) => {
                     }
                 },
                 onBorderSwipe: borderSwipe => {
-                    console.log("Borderswipe: ", borderSwipe.x)
+                    self.dispatchEvent(new CustomEvent('borderswipe', {
+                        detail: {
+                            x: borderSwipe.x,
+                            y: borderSwipe.y,
+                        }
+                    }))
+                },
+                onBorderSwipeEnd: borderSwipe => {
+                    console.log("Borderswipe end")
+                    self.dispatchEvent(new CustomEvent('borderswipeend'))
                 }
             }
         )
@@ -208,6 +217,8 @@ createYoffeeElement("wall-element", (props, self) => {
         justify-content: center;
         /*overflow: auto;  !* for some reason, important for not jittering the display wtf *! */
         overflow: hidden;
+        /*translate: 0; !* makes the FAB not jump when scolling using transform translate *!*/
+        transform: translateZ(0);
     }
     
     #container {
@@ -270,7 +281,7 @@ createYoffeeElement("wall-element", (props, self) => {
         background-color: var(--secondary-color);
         width: fit-content;
         min-width: 10px;
-        bottom: 115px;
+        bottom: 10px;
         right: 30px;
         
         opacity: 0;
@@ -287,7 +298,7 @@ createYoffeeElement("wall-element", (props, self) => {
 
 <div id="container">
     <img id="image"/>
-    ${() => state.showHolds ? html()`
+    ${() => state.showHolds && !props.hideholds ? html()`
     <div id="holds"
          oncontextmenu = ${e => {
             e.preventDefault()

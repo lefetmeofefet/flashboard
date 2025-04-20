@@ -8,7 +8,7 @@ customElements.define("text-input", class extends YoffeeElement {
         }
     }
 
-    propUpdated(prop) {
+    propUpdatedCallback(prop) {
         if (prop === "value") {
             this.setValue(this.props.value);
         }

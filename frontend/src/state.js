@@ -49,6 +49,14 @@ const GlobalState = {
     freeTextFilter: null,
     sorting: SORT_TYPES.NEWEST
 };
+
+let filteredRoutes = []
+function setFilteredRoutes(routes) {
+    filteredRoutes = routes
+}
+function getFilteredRoutes() {
+    return filteredRoutes
+}
 window.state = GlobalState
 
 function initFilters() {
@@ -143,7 +151,7 @@ async function enterRoutePage(route) {
 }
 
 async function enterConfigureHoldsPage() {
-    await unselectHolds()
+    unselectHolds()
 
     GlobalState.configuringHolds = true
     updateUrlParams({configuring: true})  // Important so that clicking "back" won't exit the site
@@ -168,7 +176,7 @@ async function exitRoutePage() {
         }
     }
 
-    await unselectHolds()
+    unselectHolds()
     await loadRoutesAndHolds()
 }
 
@@ -179,7 +187,7 @@ async function exitWall() {
     GlobalState.walls = await Api.getWalls()
 }
 
-async function unselectHolds() {
+function unselectHolds() {
     for (let hold of GlobalState.holds) {
         if (hold.inRoute || hold.holdType !== "") {
             hold.inRoute = false
@@ -287,5 +295,7 @@ export {
     isAdmin,
     sortRoutes,
     isInRoutesPage,
-    setDefaultHoldDiameter
+    setDefaultHoldDiameter,
+    setFilteredRoutes,
+    getFilteredRoutes
 }

@@ -9,7 +9,8 @@ function zoomify(element, {
     onDrag = null,
     onInteraction = null,
     numFingersChanged = null,
-    onBorderSwipe = null
+    onBorderSwipe = null,
+    onBorderSwipeEnd = null
 } = {}) {
     element.style.transformOrigin = "0 0"
     // Transition to make it smoother, but it feels slow...
@@ -188,27 +189,28 @@ function zoomify(element, {
         dragAndZoom(oldMiddlePoint, newMiddlePoint, {x: startX, y: startY}, startZoom, newZoom)
 
         // If nothing changed even though we panned, we'll call "onBorderSwipe"
-        if (borderSwiping && startX === x && startY === y && startZoom === zoom) {
+        if (canBorderSwipe && startX === x && startY === y && startZoom === zoom) {
+            startedBorderSwiping = true
             onBorderSwipe && onBorderSwipe({
                 x: newMiddlePoint.x - oldMiddlePoint.x,
                 y: newMiddlePoint.y - oldMiddlePoint.y
             })
         } else {
-            borderSwiping = false
+            canBorderSwipe = false
         }
     }
 
     let navigating = false
     let touches = []
     // All these have to be in image coordinates
-    let touchMiddlePoint, pinchDistance, startX, startY, startZoom, borderSwiping
+    let touchMiddlePoint, pinchDistance, startX, startY, startZoom, canBorderSwipe, startedBorderSwiping
 
     let initPinchDrag = () => {
         touchMiddlePoint = getMiddlePoint(touches)
         pinchDistance = getAvgDistance(touches, touchMiddlePoint)
         startX = x
         startY = y
-        borderSwiping = true
+        canBorderSwipe = true
         startZoom = zoom
         navigating = true
     }
@@ -233,6 +235,10 @@ function zoomify(element, {
         touches = event.touches
         if (touches.length === 0) {
             navigating = false
+            if (startedBorderSwiping) {
+                onBorderSwipeEnd && onBorderSwipeEnd()
+                startedBorderSwiping = false
+            }
         } else {
             initPinchDrag()
         }

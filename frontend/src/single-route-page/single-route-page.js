@@ -1,11 +1,11 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {
-    exitRoutePage,
+    exitRoutePage, getFilteredRoutes,
     GlobalState,
     isAdmin,
     onBackClicked,
     toggleLikeRoute,
-    toggleSentRoute,
+    toggleSentRoute, unselectHolds,
     WallImage
 } from "../state.js"
 import {Api} from "../api.js"
@@ -16,26 +16,26 @@ import {ROUTE_TYPES} from "/consts.js";
 
 createYoffeeElement("single-route-page", (props, self) => {
     let state = {
-        editMode: GlobalState.selectedRoute?.isNew,
+        editMode: props.route?.isNew,
         editingTitle: false,
         highlightingRoute: GlobalState.autoLeds,
         editingLists: false,
     }
     let listsState = {}
-    GlobalState.selectedRoute?.lists?.forEach(list => listsState[list] = true)
+    props.route?.lists?.forEach(list => listsState[list] = true)
 
-    if (GlobalState.selectedRoute?.isNew) {
-        GlobalState.selectedRoute.isNew = undefined
+    if (props.route?.isNew) {
+        props.route.isNew = undefined
     }
 
     const setterId = () => {
-        if (GlobalState.selectedRoute != null) {
-            return GlobalState.selectedRoute.setters[0]?.id
+        if (props.route != null) {
+            return props.route.setters[0]?.id
         }
     }
     const setterName = () => {
-        if (GlobalState.selectedRoute != null) {
-            let setter = GlobalState.selectedRoute.setters[0]
+        if (props.route != null) {
+            let setter = props.route.setters[0]
             if (setter == null) {
                 return
             }
@@ -44,11 +44,11 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
 
     const saveRoute = async () => {
-        if (GlobalState.selectedRoute == null) {
+        if (props.route == null) {
             // This can happen when navigating back without focusing out of the input
             return
         }
-        let selectedRoute = GlobalState.selectedRoute
+        let selectedRoute = props.route
         let name = self.shadowRoot.querySelector("#route-name-input").getValue()
 
         await Api.updateRoute(selectedRoute.id, {name})
@@ -56,8 +56,8 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
 
     // set holds in route
-    if (GlobalState.selectedRoute != null) {
-        for (let {id, holdType} of GlobalState.selectedRoute.holds) {
+    if (props.route != null) {
+        for (let {id, holdType} of props.route.holds) {
             let hold = GlobalState.holdMapping.get(id)
             hold.inRoute = true
             hold.holdType = holdType
@@ -116,17 +116,17 @@ createYoffeeElement("single-route-page", (props, self) => {
 
                 // Update DB
                 if (holdWasInRoute) {
-                    await Api.removeHoldFromRoute(hold.id, GlobalState.selectedRoute.id)
+                    await Api.removeHoldFromRoute(hold.id, props.route.id)
                     if (hold.inRoute) {
                         // If we just change its type, we have to remove it to add it again with a different holdType
-                        await Api.addHoldToRoute(hold.id, GlobalState.selectedRoute.id, hold.holdType)
-                        GlobalState.selectedRoute.holds.find(h => h.id === hold.id).holdType = hold.holdType
+                        await Api.addHoldToRoute(hold.id, props.route.id, hold.holdType)
+                        props.route.holds.find(h => h.id === hold.id).holdType = hold.holdType
                     } else {
-                        GlobalState.selectedRoute.holds = GlobalState.selectedRoute.holds.filter(h => h.id !== hold.id)
+                        props.route.holds = props.route.holds.filter(h => h.id !== hold.id)
                     }
                 } else {
-                    await Api.addHoldToRoute(hold.id, GlobalState.selectedRoute.id, hold.holdType)
-                    GlobalState.selectedRoute.holds.push({id: hold.id, ledId: hold.ledId, holdType: hold.holdType})
+                    await Api.addHoldToRoute(hold.id, props.route.id, hold.holdType)
+                    props.route.holds.push({id: hold.id, ledId: hold.ledId, holdType: hold.holdType})
                 }
             }
         } finally {
@@ -134,7 +134,77 @@ createYoffeeElement("single-route-page", (props, self) => {
         }
     }
 
-    return html(GlobalState, state, GlobalState.selectedRoute || {})`
+    self.onConnect = () => {
+
+    }
+
+    let mockPage
+    let lastX = 0
+    let lastXDiff = 0
+    let nextRoute = () => {
+        let filteredRoutes = getFilteredRoutes()
+        let nextRoute = filteredRoutes.indexOf(props.route) + 1
+        nextRoute = nextRoute % filteredRoutes.length
+        return filteredRoutes[nextRoute]
+    }
+    let previousRoute = () => {
+        let filteredRoutes = getFilteredRoutes()
+        let nextRoute = filteredRoutes.indexOf(props.route) - 1
+        nextRoute = nextRoute % filteredRoutes.length
+        return filteredRoutes[nextRoute]
+    }
+    const onSwipe = x => {
+        if (x !== 0 && mockPage == null) {
+            mockPage = document.createElement("single-route-page")
+            mockPage.style.position = "absolute"
+            mockPage.style.width = self.offsetWidth + "px"
+            mockPage.style.height = self.offsetHeight + "px"
+            mockPage.style.top = self.offsetTop + "px"
+            if (x < 0) {
+                mockPage.style.left = self.offsetWidth + "px"
+            } else {
+                mockPage.style.left = -self.offsetWidth + "px"
+            }
+            self.shadowRoot.appendChild(mockPage)
+            self.style.overflow = "visible"
+        }
+
+        if (mockPage != null) {
+            if (x < 0 && lastX >= 0) {
+                mockPage.style.left = self.offsetWidth + "px"
+                mockPage.props.route = nextRoute()
+            }
+            if (x > 0 && lastX <= 0) {
+                mockPage.style.left = -self.offsetWidth + "px"
+                mockPage.props.route = previousRoute()
+            }
+        }
+        self.style.transform = `translateX(${x}px)`
+        lastXDiff = x - lastX
+        lastX = x
+    }
+
+    const onSwipeEnd = () => {
+        self.style.transform = null
+        mockPage.remove()
+        mockPage = null
+        self.style.overflow = null
+
+        // Check if we swiped enough and then check if direction of movement is with the swipe, then swap route
+        if (Math.abs(lastX) > self.offsetWidth * 0.3) {
+            if (lastX < 0 && lastXDiff < 0) {
+                unselectHolds()
+                GlobalState.selectedRoute = nextRoute()
+            }
+            if (lastX > 0 && lastXDiff > 0) {
+                unselectHolds()
+                GlobalState.selectedRoute = previousRoute()
+            }
+        }
+        lastX = 0
+    }
+
+    return html(GlobalState, state, props, props.route || {})`
 <style>
     :host {
         display: flex;
@@ -280,7 +350,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                 class="header-input"
                 slot="title"
                 disabled=${() => GlobalState.user.id !== setterId() && !isAdmin()}
-                value=${() => GlobalState.selectedRoute?.name}
+                value=${() => props.route?.name}
                 changed=${() => async () => {
                     await saveRoute()
                 }}
@@ -307,7 +377,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                               let _button = self.shadowRoot.querySelector("#setter-button")
                               _dropdown.toggle(_button, true)
                           } else {
-                              alert(`Cannot change route, owner is ${GlobalState.selectedRoute.setters[0]?.nickname}`)
+                              alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                           }
                       }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#setter-dialog").close())}>
@@ -322,9 +392,9 @@ createYoffeeElement("single-route-page", (props, self) => {
             <div class="item"
                  data-selected=${() => setterId() === user.id}
                  onclick=${async () => {
-                     GlobalState.selectedRoute.setters = [{id: user.id, nickname: user.nickname}]
+                     props.route.setters = [{id: user.id, nickname: user.nickname}]
                      self.shadowRoot.querySelector("#setter-dialog").close()
-                     await Api.updateRoute(GlobalState.selectedRoute.id, {setterId: user.id})
+                     await Api.updateRoute(props.route.id, {setterId: user.id})
                  }}>
                 ${GlobalState.user === user ? "Me" : user.nickname}
             </div>
@@ -341,11 +411,11 @@ createYoffeeElement("single-route-page", (props, self) => {
                                 let _button = self.shadowRoot.querySelector("#grade-button")
                                 _dropdown.toggle(_button, true)
                             } else {
-                                alert(`Cannot change route, owner is ${GlobalState.selectedRoute.setters[0]?.nickname}`)
+                                alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                             }
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#grade-dialog").close())}>
-                V${() => GlobalState.selectedRoute?.grade}
+                V${() => props.route?.grade}
                 <x-icon icon="fa fa-caret-down"></x-icon>
             </x-button>
         </div>
@@ -354,11 +424,11 @@ createYoffeeElement("single-route-page", (props, self) => {
             ${() => new Array(18).fill(0).map((_, index) => index + 1)
             .map(grade => html()`
                 <div class="item"
-                     data-selected=${() => grade === GlobalState.selectedRoute?.grade}
+                     data-selected=${() => grade === props.route?.grade}
                      onclick=${async () => {
-                         GlobalState.selectedRoute.grade = grade
+                         props.route.grade = grade
                          self.shadowRoot.querySelector("#grade-dialog").close()
-                         await Api.updateRoute(GlobalState.selectedRoute.id, {grade})
+                         await Api.updateRoute(props.route.id, {grade})
                      }}>
                 V${grade}
             </div>
@@ -375,11 +445,11 @@ createYoffeeElement("single-route-page", (props, self) => {
                                 let _button = self.shadowRoot.querySelector("#type-button")
                                 _dropdown.toggle(_button, true)
                             } else {
-                                alert(`Cannot change route, owner is ${GlobalState.selectedRoute.setters[0]?.nickname}`)
+                                alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                             }
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#type-dialog").close())}>
-                ${() => GlobalState.selectedRoute?.type}
+                ${() => props.route?.type}
                 <x-icon icon="fa fa-caret-down"></x-icon>
             </x-button>
         </div>
@@ -388,11 +458,11 @@ createYoffeeElement("single-route-page", (props, self) => {
             ${() => [...Object.values(ROUTE_TYPES)]
                 .map(routeType => html()`
                 <div class="item"
-                     data-selected=${() => routeType === GlobalState.selectedRoute?.type}
+                     data-selected=${() => routeType === props.route?.type}
                      onclick=${async () => {
-                        GlobalState.selectedRoute.type = routeType
+                        props.route.type = routeType
                         self.shadowRoot.querySelector("#type-dialog").close()
-                        await Api.updateRoute(GlobalState.selectedRoute.id, {type: routeType})
+                        await Api.updateRoute(props.route.id, {type: routeType})
                     }}>
                 ${() => routeType}
             </div>
@@ -402,7 +472,11 @@ createYoffeeElement("single-route-page", (props, self) => {
 </secondary-header>
 
 <wall-element showallholds=${() => state.editMode}
-              onclickhold=${e => holdClicked(e.detail.hold, e.detail.long)}>
+              hideholds=${() => props.route == null}
+              onclickhold=${e => holdClicked(e.detail.hold, e.detail.long)}
+              onborderswipe=${e => onSwipe(e.detail.x)}
+              onborderswipeend=${() => onSwipeEnd()}
+              >
 </wall-element>
 
 <div id="bottom-buttons">
@@ -417,8 +491,8 @@ createYoffeeElement("single-route-page", (props, self) => {
     </x-button>
     ` : html()`
     <x-button id="heart-button"
-              liked=${() => GlobalState.selectedRoute?.liked} 
-              onclick=${() => toggleLikeRoute(GlobalState.selectedRoute)}>
+              liked=${() => props.route?.liked} 
+              onclick=${() => toggleLikeRoute(props.route)}>
         <x-icon icon="fa fa-heart"></x-icon>
     </x-button>
     
@@ -430,25 +504,25 @@ createYoffeeElement("single-route-page", (props, self) => {
                   _dropdown.toggle(_button, true, 50, "top")
               }}
               onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#stars-dialog").close())}>
-        <x-rating rating=${() => GlobalState.selectedRoute?.starsAvg}
+        <x-rating rating=${() => props.route?.starsAvg}
                   onestar
         ></x-rating>
     </x-button>
     <x-dialog id="stars-dialog"
               class="header-dialog">
-        <x-rating rating=${() => GlobalState.selectedRoute?.userStars}
+        <x-rating rating=${() => props.route?.userStars}
                   picked=${() => async stars => {
-                      GlobalState.selectedRoute.userStars = stars
-                      let response = await Api.starRoute(GlobalState.selectedRoute.id, stars)
-                      GlobalState.selectedRoute.starsAvg = response.starsAvg
-                      GlobalState.selectedWall.starredRoutes[GlobalState.selectedRoute.id] = stars
+                      props.route.userStars = stars
+                      let response = await Api.starRoute(props.route.id, stars)
+                      props.route.starsAvg = response.starsAvg
+                      GlobalState.selectedWall.starredRoutes[props.route.id] = stars
                       requestAnimationFrame(() => self.shadowRoot.querySelector("#stars-dialog").close())
                   }}></x-rating>
     </x-dialog>
     
     <x-button id="log-send-button"
-              active=${() => GlobalState.selectedRoute?.sent}
-              onclick=${() => toggleSentRoute(GlobalState.selectedRoute)}>
+              active=${() => props.route?.sent}
+              onclick=${() => toggleSentRoute(props.route)}>
         <x-icon icon="fa fa-check"></x-icon>
     </x-button>
     
@@ -462,7 +536,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                           showToast("Click holds to edit the route, long press to remove hold")
                       }
                   } else {
-                      alert(`Cannot change route, owner is ${GlobalState.selectedRoute.setters[0]?.nickname}`)
+                      alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                   }
               }}>
         <x-icon icon="fa fa-edit"></x-icon>
@@ -476,7 +550,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                     if (state.highlightingRoute) {
                         await Bluetooth.clearLeds()
                     } else {
-                        await Bluetooth.highlightRoute(GlobalState.selectedRoute)
+                        await Bluetooth.highlightRoute(props.route)
                     }
             
                     state.highlightingRoute = !state.highlightingRoute
@@ -492,17 +566,17 @@ createYoffeeElement("single-route-page", (props, self) => {
         return html()`
         <x-button slot="dialog-item"
                   onclick=${async () => {}}>
-            ${() => GlobalState.selectedRoute?.time}
+            ${() => props.route?.time}
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${async () => {
-            if (GlobalState.selectedRoute?.sends > 0) {
-                let senders = await Api.getRouteSenders(GlobalState.selectedRoute.id)
+            if (props.route?.sends > 0) {
+                let senders = await Api.getRouteSenders(props.route.id)
                 alert("Senders:\n" + senders.map(sender => "- " + sender.nickname).join("\n"))
             }
         }}>
             <x-icon icon="fa fa-check" style="width: 20px;"></x-icon>
-            ${() => GlobalState.selectedRoute?.sends} sends
+            ${() => props.route?.sends} sends
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${() => state.editingLists = true}>
@@ -517,8 +591,8 @@ createYoffeeElement("single-route-page", (props, self) => {
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${async () => {
-            if (confirm(`Delete route ${GlobalState.selectedRoute.name}?`)) {
-                await Api.deleteRoute(GlobalState.selectedRoute.id)
+            if (confirm(`Delete route ${props.route.name}?`)) {
+                await Api.deleteRoute(props.route.id)
                 await exitRoutePage()
             }
         }}>
@@ -530,7 +604,7 @@ createYoffeeElement("single-route-page", (props, self) => {
             console.log("date pressed hmm?")
         }}>
             <x-icon icon="fa fa-clock" style="width: 20px;"></x-icon>
-            Created ${() => dayjs(GlobalState.selectedRoute.createdAt).format('DD-MM-YY HH:mm:ss')}
+            Created ${() => dayjs(props.route?.createdAt).format('DD-MM-YY HH:mm:ss')}
         </x-button>
         `}`
     }
@@ -542,11 +616,11 @@ createYoffeeElement("single-route-page", (props, self) => {
                   onclick=${async e => {
             e.stopPropagation()
             listsState[list] = !listsState[list]
-            let currentLists = GlobalState.selectedRoute.lists || []
+            let currentLists = props.route.lists || []
             let lists = listsState[list] ? [...currentLists, list] : currentLists.filter(l => l !== list)
-            GlobalState.selectedRoute.lists = lists
+            props.route.lists = lists
             await Api.updateRoute(
-                GlobalState.selectedRoute.id,
+                props.route.id,
                 {lists}
             )
         }}>
@@ -562,11 +636,11 @@ createYoffeeElement("single-route-page", (props, self) => {
             if (list != null) {
                 listsState[list] = true
 
-                GlobalState.selectedRoute.lists = [...(GlobalState.selectedRoute.lists || []), list]
+                props.route.lists = [...(props.route.lists || []), list]
                 GlobalState.lists = [...GlobalState.lists, list].sort((a, b) => a < b ? -1 : 1)
                 await Api.updateRoute(
-                    GlobalState.selectedRoute.id,
-                    {lists: GlobalState.selectedRoute.lists}
+                    props.route.id,
+                    {lists: props.route.lists}
                 )
             }
         }}>

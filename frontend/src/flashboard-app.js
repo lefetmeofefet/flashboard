@@ -1,5 +1,5 @@
 import {html, createYoffeeElement} from "../libs/yoffee/yoffee.min.js"
-import {GlobalState, exitRoutePage, unselectHolds} from "./state.js";
+import {GlobalState, exitRoutePage, unselectHolds} from "./state.js"
 import "./login-page/login-page.js"
 import "./walls-page/walls-page.js"
 import "./settings-page/settings-page.js"
@@ -108,7 +108,7 @@ ${() => {
     } else if (GlobalState.inSettingsPage) {
         return html()`<settings-page></settings-page>`
     } else if (GlobalState.selectedRoute != null) {
-        return html()`<single-route-page></single-route-page>`
+        return html()`<single-route-page route=${() => GlobalState.selectedRoute}></single-route-page>`
     } else if (GlobalState.configuringHolds) {
         return html()`<edit-wall-page></edit-wall-page>`
     } else if (GlobalState.isSnaking) {
