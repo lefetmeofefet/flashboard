@@ -11,6 +11,8 @@ const IMAGE_MODES = {
     STRETCH: "STRETCH"
 }
 
+let defaultImageWidth, defaultImageHeight
+
 createYoffeeElement("wall-element", (props, self) => {
     let state = {
         imageMode: localStorage.getItem("wall-image-mode") || IMAGE_MODES.CONTAIN,
@@ -33,21 +35,28 @@ createYoffeeElement("wall-element", (props, self) => {
     self.onConnect = () => {
         containerElement = self.shadowRoot.querySelector("#container")
         imageElement = self.shadowRoot.querySelector("#image")
-        imageElement.style.opacity = "0"
-        imageElement.onload = () => {
-            let xRatio = self.offsetWidth / imageElement.naturalWidth
-            let yRatio = self.offsetHeight / imageElement.naturalHeight
-            let ratio = Math.min(xRatio, yRatio)
-            imageElement.width = imageElement.naturalWidth * ratio
-            imageElement.height = imageElement.naturalHeight * ratio
-            if (state.imageMode !== IMAGE_MODES.CONTAIN) {
-                setImageMode(state.imageMode)
+
+        // First load we calculate the width and height of the image to be used forevermore
+        if (defaultImageWidth == null) {
+            imageElement.style.opacity = "0"
+            imageElement.onload = () => {
+                let xRatio = self.offsetWidth / imageElement.naturalWidth
+                let yRatio = self.offsetHeight / imageElement.naturalHeight
+                let ratio = Math.min(xRatio, yRatio)
+                imageElement.width = imageElement.naturalWidth * ratio
+                imageElement.height = imageElement.naturalHeight * ratio
+
+                if (state.imageMode !== IMAGE_MODES.CONTAIN) {
+                    setImageMode(state.imageMode)
+                }
+
+                imageElement.style.opacity = "1"
+                state.showHolds = true
+                defaultImageWidth = imageElement.width
+                defaultImageHeight = imageElement.height
             }
-            imageElement.style.opacity = "1"
-            state.showHolds = true
-            holdsElement = self.shadowRoot.querySelector("#holds")
         }
-        imageElement.src = WallImage
+        // imageElement.src = WallImage
 
         const zoomControlButton = self.shadowRoot.querySelector("x-button#zoom-control-button")
         let hideTimeout
@@ -95,6 +104,11 @@ createYoffeeElement("wall-element", (props, self) => {
                 }
             }
         )
+        // If we already loaded the image width, just show it now
+        if (defaultImageWidth != null && state.imageMode !== IMAGE_MODES.CONTAIN) {
+            setImageMode(state.imageMode)
+            state.showHolds = true
+        }
     }
 
     self.shadowRoot.addEventListener('pointerup', async () => {
@@ -129,6 +143,9 @@ createYoffeeElement("wall-element", (props, self) => {
     }
 
     self.convertPointToWallPosition = (pageX, pageY) => {
+        if (holdsElement == null) {
+            holdsElement = self.shadowRoot.querySelector("#holds")
+        }
         let {x, y, width, height} = holdsElement.getBoundingClientRect()
         return {
             x: bound((pageX - x) / width),
@@ -219,6 +236,7 @@ createYoffeeElement("wall-element", (props, self) => {
         overflow: hidden;
         /*translate: 0; !* makes the FAB not jump when scolling using transform translate *!*/
         transform: translateZ(0);
+        position: relative;
     }
     
     #container {
@@ -297,7 +315,7 @@ createYoffeeElement("wall-element", (props, self) => {
 </style>
 
 <div id="container">
-    <img id="image"/>
+    <img id="image" src="${WallImage}" width="${defaultImageWidth}" height="${defaultImageHeight}"/>
     ${() => state.showHolds && !props.hideholds ? html()`
     <div id="holds"
          oncontextmenu = ${e => {

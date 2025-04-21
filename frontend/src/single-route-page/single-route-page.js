@@ -185,23 +185,58 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
 
     const onSwipeEnd = () => {
-        self.style.transform = null
-        mockPage.remove()
-        mockPage = null
-        self.style.overflow = null
+        let animationDurationSeconds = 0.2
+        self.style.transitionProperty = "transform"
+        self.style.transitionDuration = `${animationDurationSeconds}s`
 
         // Check if we swiped enough and then check if direction of movement is with the swipe, then swap route
-        if (Math.abs(lastX) > self.offsetWidth * 0.3) {
-            if (lastX < 0 && lastXDiff < 0) {
-                unselectHolds()
-                GlobalState.selectedRoute = nextRoute()
+        let swipeDirection = null
+        let dragSpeedToSwipe = 5
+        if (Math.abs(lastXDiff) >= dragSpeedToSwipe) {
+            // If we swiped fast
+            if (lastXDiff < 0) {
+                swipeDirection = "left"
+            } else {
+                swipeDirection = "right"
             }
-            if (lastX > 0 && lastXDiff > 0) {
-                unselectHolds()
-                GlobalState.selectedRoute = previousRoute()
+        } else if (Math.abs(lastX) > self.offsetWidth * 0.5) {
+            // If we swiped slow but left the swiping more than halfway to the next / previous route
+            if (lastX < 0) {
+                swipeDirection = "left"
+            }
+            if (lastX > 0) {
+                swipeDirection = "right"
             }
         }
-        lastX = 0
+        if (swipeDirection != null) {
+            unselectHolds()
+        }
+
+        // Make animation go to the right direction: left, right or just back to 0
+        if (swipeDirection == null) {
+            self.style.transform = "translateX(0px)"
+        } else if (swipeDirection === "left") {
+            self.style.transform = `translateX(-${self.offsetWidth}px)`
+        } else if (swipeDirection === "right") {
+            self.style.transform = `translateX(${self.offsetWidth}px)`
+        }
+
+        setTimeout(() => {
+            self.style.transitionProperty = null
+            self.style.transitionDuration = null
+
+            mockPage.remove()
+            mockPage = null
+            self.style.overflow = null
+
+            if (swipeDirection === "left") {
+                GlobalState.selectedRoute = nextRoute()
+            }
+            if (swipeDirection === "right") {
+                GlobalState.selectedRoute = previousRoute()
+            }
+            lastX = 0
+        }, animationDurationSeconds * 1000)
     }
 
     return html(GlobalState, state, props, props.route || {})`

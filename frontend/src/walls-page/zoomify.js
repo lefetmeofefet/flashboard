@@ -62,8 +62,8 @@ function zoomify(element, {
         event.preventDefault();
         let newZoom = zoom - event.deltaY * wheelZoomSpeed * zoom
         let mousePosition = {
-            x: event.clientX - element.offsetLeft,
-            y: event.clientY - element.offsetTop
+            x: event.clientX - element.offsetLeft - parent.offsetLeft,
+            y: event.clientY - element.offsetTop - parent.offsetTop
         }
 
         dragAndZoom(mousePosition, mousePosition, {x, y}, zoom, newZoom)
@@ -82,7 +82,7 @@ function zoomify(element, {
             let elementWidth = element.offsetWidth * hZoom()
             let elementX = element.offsetLeft + x
             let elementHeight = element.offsetHeight * vZoom()
-            let elementY = element.offsetTop + y
+            let elementY = y
 
             // If dimension is smaller than parent, then don't allow scrolling at all
             if (elementWidth <= parent.offsetWidth) {
@@ -108,11 +108,11 @@ function zoomify(element, {
 
             // If dimension is larger than parent, don't allow sliding in to create margin
             if (elementHeight > parent.offsetHeight) {
-                if (elementY > parent.offsetTop) {
-                    y = parent.offsetTop - element.offsetTop
+                if (elementY > 0) {
+                    y =  - element.offsetTop
                 }
-                if (elementHeight + elementY < parent.offsetTop + parent.offsetHeight) {
-                    y = parent.offsetTop + parent.offsetHeight - (element.offsetTop + elementHeight)
+                if (elementHeight + elementY <  + parent.offsetHeight) {
+                    y =  + parent.offsetHeight - (element.offsetTop + elementHeight)
                 }
             }
         }
@@ -136,8 +136,8 @@ function zoomify(element, {
     let getMiddlePoint = touches => {
         let xSum = 0, ySum = 0
         for (let touch of touches) {
-            xSum += touch.clientX - element.offsetLeft
-            ySum += touch.clientY - element.offsetTop
+            xSum += touch.clientX - element.offsetLeft - parent.offsetLeft
+            ySum += touch.clientY - element.offsetTop - parent.offsetTop
         }
         return {
             x: xSum / touches.length,
@@ -149,8 +149,8 @@ function zoomify(element, {
         let distance = 0
         for (let touch of touches) {
             distance += Math.sqrt(
-                (touch.clientX - element.offsetLeft - point.x) * (touch.clientX - element.offsetLeft - point.x)
-                + (touch.clientY - element.offsetTop - point.y) * (touch.clientY - element.offsetTop - point.y)
+                (touch.clientX - element.offsetLeft - parent.offsetLeft - point.x) * (touch.clientX - element.offsetLeft - parent.offsetLeft - point.x)
+                + (touch.clientY - element.offsetTop - parent.offsetTop - point.y) * (touch.clientY - element.offsetTop - parent.offsetTop - point.y)
             )
         }
         return distance / touches.length
