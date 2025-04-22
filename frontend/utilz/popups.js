@@ -25,7 +25,7 @@ async function showAlert(message, {confirmButtonText, confirmButtonColor, text, 
     })
 }
 
-async function showConfirm(message, {confirmButtonText, confirmButtonColor}) {
+async function showConfirm(message, {confirmButtonText, confirmButtonColor} = {}) {
     let result = await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",
         title: message,
