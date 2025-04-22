@@ -20,6 +20,7 @@ import "./components/x-tag.js"
 import {privacyPolicy} from "./privacy-policy/privacy-policy-content.js";
 import {getUrlParams, updateUrlParams} from "../utilz/url-utilz.js";
 import {Flutter} from "./flutter-interface.js";
+import {showAlert} from "../utilz/popups.js";
 
 createYoffeeElement("flashboard-app", (props, self) => {
     let state = {
@@ -65,7 +66,8 @@ createYoffeeElement("flashboard-app", (props, self) => {
         width: 100%;
         background-color: var(--secondary-color);
         padding: 12px 0;
-        align-items: center
+        align-items: center;
+        gap: 10px;
     }
     
     #app-store-links > img {
@@ -90,6 +92,7 @@ createYoffeeElement("flashboard-app", (props, self) => {
 ${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() ? html()`
 <div id="app-store-links">
     <img src="../res/images/GetItOnGooglePlay_button.png" onclick=${() => window.open("https://play.google.com/store/apps/details?id=flashboard.site.flashboard", "_blank")}/>
+    <img src="../res/images/AppStoreBadge.svg" onclick=${() => showAlert("iPhone app coming soon!", {html: "Meanwhile to use bluetooth on iPhones:<br>- Install the <a href='https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055' style='color: var(--secondary-color);'>Bluefy App</a> <br>- Open it and go to flashboard.site"})}/>
     <x-button id="cancel-button" 
               onclick=${() => {
                   localStorage.setItem("no-app-store-links", "true")

@@ -9,7 +9,7 @@ import {
     WallImage
 } from "../state.js"
 import {Api} from "../api.js"
-import {showToast} from "../../utilz/toaster.js";
+import {showAlert, showConfirm, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
 import {ROUTE_TYPES} from "/consts.js";
 
@@ -412,7 +412,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                               let _button = self.shadowRoot.querySelector("#setter-button")
                               _dropdown.toggle(_button, true)
                           } else {
-                              alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
+                              showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                           }
                       }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#setter-dialog").close())}>
@@ -446,7 +446,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                                 let _button = self.shadowRoot.querySelector("#grade-button")
                                 _dropdown.toggle(_button, true)
                             } else {
-                                alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
+                                showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                             }
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#grade-dialog").close())}>
@@ -480,7 +480,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                                 let _button = self.shadowRoot.querySelector("#type-button")
                                 _dropdown.toggle(_button, true)
                             } else {
-                                alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
+                                showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                             }
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#type-dialog").close())}>
@@ -571,7 +571,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                           showToast("Click holds to edit the route, long press to remove hold")
                       }
                   } else {
-                      alert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
+                      showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
                   }
               }}>
         <x-icon icon="fa fa-edit"></x-icon>
@@ -607,7 +607,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                   onclick=${async () => {
             if (props.route?.sends > 0) {
                 let senders = await Api.getRouteSenders(props.route.id)
-                alert("Senders:\n" + senders.map(sender => "- " + sender.nickname).join("\n"))
+                showAlert("Who sent this route?", {html: senders.map(sender => sender.nickname).join("<br>")})
             }
         }}>
             <x-icon icon="fa fa-check" style="width: 20px;"></x-icon>
@@ -626,7 +626,7 @@ createYoffeeElement("single-route-page", (props, self) => {
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${async () => {
-            if (confirm(`Delete route ${props.route.name}?`)) {
+            if (await showConfirm(`Delete route ${props.route.name}?`)) {
                 await Api.deleteRoute(props.route.id)
                 await exitRoutePage()
             }

@@ -5,7 +5,7 @@ import "../components/text-input.js"
 import "../components/x-button.js"
 import "../components/x-icon.js"
 import {getUrlParams, updateUrlParams} from "../../utilz/url-utilz.js";
-import {showToast} from "../../utilz/toaster.js";
+import {showToast} from "../../utilz/popups.js";
 import {Flutter} from "../flutter-interface.js";
 
 

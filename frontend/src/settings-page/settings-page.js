@@ -1,7 +1,7 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {GlobalState} from "../state.js"
 import {Api} from "../api.js"
-import {showToast} from "../../utilz/toaster.js";
+import {showToast} from "../../utilz/popups.js";
 
 
 createYoffeeElement("settings-page", (props, self) => {

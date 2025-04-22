@@ -10,7 +10,7 @@ import "./components/x-button.js"
 import "./components/x-icon.js"
 import "./components/x-tag.js"
 import {Api} from "./api.js";
-import {showToast} from "../utilz/toaster.js";
+import {showToast} from "../utilz/popups.js";
 import {loadFile} from "../utilz/load-file.js";
 import {Bluetooth} from "./bluetooth.js";
 import {enterFullscreen, exitFullscreen, isFullScreen} from "../utilz/fullscreen.js";

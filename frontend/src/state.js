@@ -1,5 +1,5 @@
 import {getUrlParams, registerUrlListener, updateUrlParams} from "../utilz/url-utilz.js";
-import {showToast} from "../utilz/toaster.js";
+import {showToast} from "../utilz/popups.js";
 import {Api} from "./api.js";
 import {Bluetooth} from "./bluetooth.js";
 import {SORT_TYPES} from "./routes-page/routes-filter.js";

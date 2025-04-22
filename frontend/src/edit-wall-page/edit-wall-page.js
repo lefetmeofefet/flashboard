@@ -1,7 +1,7 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {GlobalState, setDefaultHoldDiameter, WallImage} from "../state.js"
 import {Api} from "../api.js"
-import {showToast} from "../../utilz/toaster.js";
+import {showAlert, showConfirm, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
 import "../components/text-input.js"
 import "../components/x-button.js"
@@ -114,7 +114,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
             )
             return
         }
-        if (confirm("Delete the selected hold?")) {
+        if (await showConfirm("Delete the selected hold?")) {
             await Api.deleteHold(hold.id)
             GlobalState.holdMapping.delete(hold.id)
             GlobalState.holds = GlobalState.holds.filter(h => h.id !== hold.id)
@@ -124,7 +124,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     }
 
     async function setHoldLedId(hold, ledId) {
-        if (ledId == null && !confirm("Unlink the LED from the hold? you can reassign any LED later")) {
+        if (ledId == null && !await showConfirm("Unlink the LED from the hold?", {text: "You can reassign any LED later"})) {
             return
         }
         if (updatingLED) {
@@ -456,7 +456,7 @@ ${() => WallImage == null && html()`
     </div>
     
     <x-button slot="dialog-item"
-              onclick=${() => alert("Coming soon!")}>
+              onclick=${() => showAlert("Coming soon!")}>
         <x-icon icon="fa fa-paint-brush" style="width: 20px;"></x-icon>
         Edit colors
     </x-button>

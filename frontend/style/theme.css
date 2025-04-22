@@ -12,6 +12,7 @@ body[theme="light"] {
 
 body {
     --secondary-color-rgb: 67, 185, 194;
+    /*hex secondary color: #43b9c2*/
     
     --background-color: rgb(var(--background-color-rgb));
     --secondary-color: rgb(var(--secondary-color-rgb));

@@ -1,5 +1,5 @@
 import {GlobalState} from "./state.js";
-import {showToast} from "../utilz/toaster.js";
+import {showToast} from "../utilz/popups.js";
 
 let ERROR_MESSAGES = {
     MISSING_TOKEN: "MISSING_TOKEN",

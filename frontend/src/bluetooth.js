@@ -1,5 +1,5 @@
 import {exitWall, GlobalState} from "./state.js";
-import {showToast} from "../utilz/toaster.js";
+import {showConfirm, showToast} from "../utilz/popups.js";
 import {Api} from "./api.js";
 import {Flutter} from "./flutter-interface.js";
 
@@ -115,7 +115,7 @@ async function connectToWall(secondTry) {
                 showToast(`Nearby LED system is already registered to a different wall ("${wallInfo.name}")! did you choose the right wall in the app?`, {error: true, duration: 10000})
                 await disconnectFromBluetooth()
                 return Promise.reject("Attempted connecting to a LED system which is already linked to a different wall")
-            } else if (confirm("You've connected to a new LED system. Continue?")) {
+            } else if (await showConfirm("You've connected to a new LED system. Continue?")) {
                 await Api.setWallMacAddress(GlobalState.selectedWall.id, wallInfo.id)
                 GlobalState.selectedWall.macAddress = wallInfo.id
             } else {

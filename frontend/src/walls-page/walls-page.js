@@ -6,7 +6,7 @@ import "../components/x-icon.js"
 import {Bluetooth} from "../bluetooth.js";
 import {getUrlParams, updateUrlParams} from "../../utilz/url-utilz.js";
 import {Api} from "../api.js";
-import {showToast} from "../../utilz/toaster.js";
+import {showToast} from "../../utilz/popups.js";
 
 createYoffeeElement("walls-page", () => {
     let urlParams = getUrlParams()
