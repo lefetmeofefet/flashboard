@@ -13,6 +13,7 @@ function showToast(message, {duration = 3000, error = false, position = "top"} =
     }).showToast();
 }
 
+// SweetAlert2
 async function showAlert(message, {confirmButtonText, confirmButtonColor, text, html} = {}) {
     await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",

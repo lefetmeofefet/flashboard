@@ -1,5 +1,5 @@
 import {exitWall, GlobalState} from "./state.js";
-import {showConfirm, showToast} from "../utilz/popups.js";
+import {showAlert, showConfirm, showToast} from "../utilz/popups.js";
 import {Api} from "./api.js";
 import {Flutter} from "./flutter-interface.js";
 
@@ -38,7 +38,8 @@ async function scanAndConnect(onMessageCb, onDisconnectCb) {
     // Check if iphone or for other reason the API is not supported
     if (navigator.bluetooth?.requestDevice == null) {
         throw {
-            knownError: "This browser doesn't support bluetooth, please use the app" + (window.isIOS ? ". iPhone app coming soon!" : "")
+            errorName: "noBluetooth",
+            knownError: "This browser doesn't support bluetooth, please use the Flashboard app"
         }
     }
 
@@ -146,7 +147,20 @@ async function connectToWall(secondTry) {
         console.log("Error connecting to BT: ", e)
         console.error(e)
         if (e.knownError) {
-            showToast(e.knownError, {duration: 5000, error: true})
+            if (e.errorName === "noBluetooth") {
+                showToast(e.knownError, {duration: 5000, error: true})
+                if (window.isIOS) {
+                    showAlert("iPhone browsers don't support bluetooth", {
+                        html: `iPhone browsers do not support bluetooth. The iPhone app is coming soon, meanwhile to use bluetooth please do the following:
+                                <br>
+                                - Install the <a href='https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055' style='color: var(--secondary-color);'>Bluefy App</a> 
+                                <br>
+                                - Open it and go to flashboard.site`
+                    })
+                }
+            } else {
+                showToast(e.knownError, {duration: 5000, error: true})
+            }
             throw new Error(e.knownError)
         } if (e.fromFlutter) {
             showToast(e.message, {duration: 5000, error: true})
