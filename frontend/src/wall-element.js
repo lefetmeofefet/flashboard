@@ -105,8 +105,10 @@ createYoffeeElement("wall-element", (props, self) => {
             }
         )
         // If we already loaded the image width, just show it now
-        if (defaultImageWidth != null && state.imageMode !== IMAGE_MODES.CONTAIN) {
-            setImageMode(state.imageMode)
+        if (defaultImageWidth != null) {
+            if (state.imageMode !== IMAGE_MODES.CONTAIN) {
+                setImageMode(state.imageMode)
+            }
             state.showHolds = true
         }
     }
