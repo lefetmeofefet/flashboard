@@ -268,6 +268,7 @@ createYoffeeElement("wall-element", (props, self) => {
         border-radius: 100px;
         color: var(--text-color-on-secondary);
         transform: translate3d(-50%, 50%, 0);
+        -webkit-transform: translate3d(-50%, 50%, 0);
         border: 3px solid transparent;
         border: 1px solid #ffffff50;
     }
