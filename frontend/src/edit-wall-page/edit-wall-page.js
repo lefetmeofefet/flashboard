@@ -242,7 +242,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         box-shadow: none;
         border: 3px dashed var(--text-color-weak-3);
         border-radius: 20px;
-        margin: auto 0;
+        margin: auto 20px;
         padding: 30px 20px;
         width: fit-content;
         align-self: center;
