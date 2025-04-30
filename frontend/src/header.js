@@ -10,7 +10,7 @@ import "./components/x-button.js"
 import "./components/x-icon.js"
 import "./components/x-tag.js"
 import {Api} from "./api.js";
-import {showToast} from "../utilz/popups.js";
+import {showPrompt, showToast} from "../utilz/popups.js";
 import {loadFile} from "../utilz/load-file.js";
 import {Bluetooth} from "./bluetooth.js";
 import {enterFullscreen, exitFullscreen, isFullScreen} from "../utilz/fullscreen.js";
@@ -310,7 +310,9 @@ ${() => GlobalState.selectedWall != null && html()`
 <x-dialog id="settings-dialog">
     <div id="settings-container">
         <div id="title" onclick=${() => async () => {
-                let newNickname = prompt("Enter your new nickname: ")
+                let newNickname = await showPrompt("Edit nickname", {
+                    placeholder: "New nickname"
+                })
                 if (newNickname != null) {
                     await Api.setNickname(newNickname)
                     GlobalState.user = {...GlobalState.user, nickname: newNickname}
@@ -429,7 +431,14 @@ ${() => GlobalState.selectedWall != null && html()`
                   id="delete-wall"
                   onclick=${async () => {
                       let wallName = GlobalState.selectedWall.name
-                      let input = prompt(`Are you SURE you want to delete the wall ${GlobalState.selectedWall.name}? ALL data including routes and holds will be deleted. \nTo continue, enter the wall name:`)
+                      let input = await showPrompt("Delete wall", {
+                           
+                          placeholder: "Wall name",
+                          options: {
+                              icon: "warning",
+                              text: `Are you SURE you want to delete the wall ${GlobalState.selectedWall.name}? ALL data including routes and holds will be deleted. \nTo continue, enter the wall name.`
+                          }
+                      })
                       if (input === GlobalState.selectedWall.name) {
                           await Api.deleteWall(GlobalState.selectedWall.id)
                           showToast(`Successfully deleted the wall ${wallName}!`)

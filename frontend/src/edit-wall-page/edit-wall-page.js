@@ -1,7 +1,7 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {GlobalState, setDefaultHoldDiameter, WallImage} from "../state.js"
 import {Api} from "../api.js"
-import {showAlert, showConfirm, showToast} from "../../utilz/popups.js";
+import {showAlert, showConfirm, showPrompt, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
 import "../components/text-input.js"
 import "../components/x-button.js"
@@ -402,8 +402,12 @@ ${() => WallImage == null && html()`
     <x-button slot="dialog-item"
               id="rename-wall"
               onclick=${async () => {
-                    let newWallName = prompt("What would you like to call your wall?")
-                    if (newWallName != null) {
+                    let newWallName = await showPrompt(
+                        "How would you like to call your wall?", {
+                            placeholder: "Wall name",
+                            confirmButtonText: "Rename"
+                        })
+                    if (newWallName != null && newWallName.trim() !== "") {
                         GlobalState.loading = true
                         try {
                             await Api.setWallName(newWallName)
@@ -427,7 +431,15 @@ ${() => WallImage == null && html()`
     </x-button>
     <x-button slot="dialog-item"
               onclick=${async () => {
-                    let brightness = parseInt(prompt("Enter brightness from 0 to 100: "))
+                    let brightness = parseInt(await showPrompt("Set brightness", {
+                        type: "range",
+                        inputAttributes: {
+                            min: "0",
+                            max: "100",
+                            step: "1"
+                        },
+                        value: Math.floor((GlobalState.selectedWall.brightness / 255) * 100)
+                    }))
                     if (!isNaN(brightness)) {
                         let realBrightness = Math.round((brightness / 100) * 255)
                         await Bluetooth.setWallBrightness(realBrightness)

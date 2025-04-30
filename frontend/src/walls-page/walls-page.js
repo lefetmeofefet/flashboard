@@ -6,7 +6,7 @@ import "../components/x-icon.js"
 import {Bluetooth} from "../bluetooth.js";
 import {getUrlParams, updateUrlParams} from "../../utilz/url-utilz.js";
 import {Api} from "../api.js";
-import {showToast} from "../../utilz/popups.js";
+import {showPrompt, showToast} from "../../utilz/popups.js";
 
 createYoffeeElement("walls-page", () => {
     let urlParams = getUrlParams()
@@ -66,7 +66,10 @@ createYoffeeElement("walls-page", () => {
 
     async function enterWithCode(code) {
         if (code == null) {
-            code = prompt("What's the wall code?")
+            code = await showPrompt("Join with code", {
+                placeholder: "Wall code",
+                confirmButtonText: "Join"
+            })
         }
         if (code != null) {
             let wallId = await Api.connectToWallByCode(code)

@@ -14,7 +14,7 @@ function showToast(message, {duration = 3000, error = false, position = "top"} =
 }
 
 // SweetAlert2
-async function showAlert(message, {confirmButtonText, confirmButtonColor, text, html} = {}) {
+async function showAlert(message, {confirmButtonText, confirmButtonColor, text, html, options} = {}) {
     await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",
         title: message,
@@ -22,10 +22,12 @@ async function showAlert(message, {confirmButtonText, confirmButtonColor, text, 
         html: html,
         confirmButtonText: confirmButtonText || "OK",
         confirmButtonColor: confirmButtonColor || "#43b9c2",
+        icon: "info",
+        ...(options || {})
     })
 }
 
-async function showConfirm(message, {confirmButtonText, confirmButtonColor} = {}) {
+async function showConfirm(message, {confirmButtonText, confirmButtonColor, options} = {}) {
     let result = await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",
         title: message,
@@ -33,8 +35,28 @@ async function showConfirm(message, {confirmButtonText, confirmButtonColor} = {}
         showCancelButton: true,
         confirmButtonText: confirmButtonText || "Yes",
         confirmButtonColor: confirmButtonColor || "#43b9c2",
+        icon: "question",
+        ...(options || {})
     })
     return result.isConfirmed
 }
 
-export {showToast, showAlert, showConfirm}
+async function showPrompt(message, {type, placeholder, label, value, inputAttributes, confirmButtonText, confirmButtonColor, options} = {}) {
+    let result = await Swal.fire({
+        theme: GlobalState.darkTheme ? "dark" : "light",
+        title: message,
+        input: type || "text",
+        inputLabel: label,
+        inputPlaceholder: placeholder,
+        inputAttributes: inputAttributes,
+        inputValue: value,
+        showDenyButton: false,
+        showCancelButton: true,
+        confirmButtonText: confirmButtonText || "OK",
+        confirmButtonColor: confirmButtonColor || "#43b9c2",
+        ...(options || {})
+    })
+    return result.value
+}
+
+export {showToast, showAlert, showConfirm, showPrompt}

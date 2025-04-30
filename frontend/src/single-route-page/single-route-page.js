@@ -9,7 +9,7 @@ import {
     WallImage
 } from "../state.js"
 import {Api} from "../api.js"
-import {showAlert, showConfirm, showToast} from "../../utilz/popups.js";
+import {showAlert, showConfirm, showPrompt, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
 import {ROUTE_TYPES} from "/consts.js";
 
@@ -667,7 +667,10 @@ createYoffeeElement("single-route-page", (props, self) => {
         <x-button slot="dialog-item" 
                   onclick=${async e => {
             e.stopPropagation()
-            let list = prompt("Enter new list name")
+            let list = await showPrompt("Create list", {
+                placeholder: "List name",
+                confirmButtonText: "Create"
+            })
             if (list != null) {
                 listsState[list] = true
 

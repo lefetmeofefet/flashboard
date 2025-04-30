@@ -30,13 +30,22 @@
     <!--Styles-->
     <link href="./style/scrollbar-style.css" rel="stylesheet">
     <link href="./style/theme.css" rel="stylesheet">
+
+    <!--Modal library-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         body {
             font-family: 'Poppins', 'Heebo', 'Roboto', 'sans-serif';
-            height: 100%;
+            height: 100% !important;
             margin: 0;
             background-color: var(--background-color);
             color: var(--text-color);
+        }
+
+        /* Hack for swal2 alert library to not change body height*/
+        body.swal2-height-auto {
+            height: 100% !important
         }
 
         html {
@@ -70,9 +79,6 @@
 <!--Toast-->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-<!--Modal library-->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!--Device detection-->
 <script>
