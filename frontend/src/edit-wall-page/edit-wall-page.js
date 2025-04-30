@@ -26,7 +26,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     const state = {
         selectedHold: null,
         highlightingLed: GlobalState.autoLeds,
-        placingHoldMode: false,
+        editingHoldsMode: false,
         editingLedId: false
     }
 
@@ -78,7 +78,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         if (GlobalState.loading) {
             return
         }
-        if (state.placingHoldMode) {
+        if (state.editingHoldsMode) {
             if (state.selectedHold != null) {
                 await unselectHold(state.selectedHold)
                 state.selectedHold = null
@@ -242,7 +242,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         box-shadow: none;
         border: 3px dashed var(--text-color-weak-3);
         border-radius: 20px;
-        margin: 20px 20px 50% 20px;
+        margin: auto 0;
         padding: 30px 20px;
         width: fit-content;
         align-self: center;
@@ -462,6 +462,7 @@ ${() => WallImage == null && html()`
     </x-button>
 </secondary-header>
 
+${() => WallImage != null && html()`
 <wall-element showallholds
               draggingholds=${() => state.editingHoldsMode}
               style=${() => state.editingHoldsMode ? "opacity: 0.6;" : "opacity: 1;"}
@@ -470,6 +471,7 @@ ${() => WallImage == null && html()`
               onclickhold=${e => holdClicked(e.detail.hold, e.detail.long)}
               onclick=${e => wallClicked(e)}>
 </wall-element>
+`}
 
 ${() => WallImage == null && html()`
 <x-button id="upload-image-button" onclick=${() => uploadImage()}>
