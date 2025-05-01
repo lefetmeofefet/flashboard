@@ -1,5 +1,5 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
-import {enterRoutePage, GlobalState, loadRoutesAndHolds} from "../state.js";
+import {chooseWall, GlobalState} from "../state.js";
 import "../components/text-input.js"
 import "../components/x-button.js"
 import "../components/x-icon.js"
@@ -10,34 +10,9 @@ import {showPrompt, showToast} from "../../utilz/popups.js";
 
 createYoffeeElement("walls-page", () => {
     let urlParams = getUrlParams()
-    // TODO: Fix the navigation bugs once and for alll!!
-    // if (urlParams.wall != null) {
-    //     let wall = state.walls.find(wall => wall.id === urlParams.wall)
-    //     if (wall != null) {
-    //         chooseWall(wall)
-    //     }
-    // }
-
     if (urlParams.code != null) {
         enterWithCode(urlParams.code)
         updateUrlParams({code: undefined})
-    }
-
-    async function chooseWall(wallId) {
-        try {
-            GlobalState.loading = true
-            updateUrlParams({wall: undefined})
-            await loadRoutesAndHolds(true, wallId)
-
-            if (urlParams.route != null) {
-                let route = GlobalState.routes.find(r => r.id === urlParams.route)
-                if (route != null) {
-                    await enterRoutePage(route)
-                }
-            }
-        } finally {
-            GlobalState.loading = false
-        }
     }
 
     async function connectToNearbyWall() {

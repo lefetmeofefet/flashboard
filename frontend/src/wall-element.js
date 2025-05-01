@@ -37,24 +37,26 @@ createYoffeeElement("wall-element", (props, self) => {
         imageElement = self.shadowRoot.querySelector("#image")
 
         // First load we calculate the width and height of the image to be used forevermore
-        if (defaultImageWidth == null) {
-            imageElement.style.opacity = "0"
-            imageElement.onload = () => {
-                let xRatio = self.offsetWidth / imageElement.naturalWidth
-                let yRatio = self.offsetHeight / imageElement.naturalHeight
-                let ratio = Math.min(xRatio, yRatio)
-                imageElement.width = imageElement.naturalWidth * ratio
-                imageElement.height = imageElement.naturalHeight * ratio
-
-                if (state.imageMode !== IMAGE_MODES.CONTAIN) {
-                    setImageMode(state.imageMode)
-                }
-
-                imageElement.style.opacity = "1"
-                state.showHolds = true
-                defaultImageWidth = imageElement.width
-                defaultImageHeight = imageElement.height
+        imageElement.onload = () => {
+            let xRatio = self.offsetWidth / imageElement.naturalWidth
+            let yRatio = self.offsetHeight / imageElement.naturalHeight
+            let ratio = Math.min(xRatio, yRatio)
+            let newWidth = imageElement.naturalWidth * ratio
+            let newHeight = imageElement.naturalHeight * ratio
+            if (imageElement.width !== newWidth) {
+                imageElement.width = newWidth
             }
+            if (imageElement.height !== newHeight) {
+                imageElement.height = newHeight
+            }
+
+            if (state.imageMode !== IMAGE_MODES.CONTAIN) {
+                setImageMode(state.imageMode)
+            }
+
+            state.showHolds = true
+            defaultImageWidth = imageElement.width
+            defaultImageHeight = imageElement.height
         }
         // imageElement.src = WallImage
 
@@ -104,12 +106,8 @@ createYoffeeElement("wall-element", (props, self) => {
                 }
             }
         )
-        // If we already loaded the image width, just show it now
-        if (defaultImageWidth != null) {
-            if (state.imageMode !== IMAGE_MODES.CONTAIN) {
-                setImageMode(state.imageMode)
-            }
-            state.showHolds = true
+        if (state.imageMode !== IMAGE_MODES.CONTAIN) {
+            setImageMode(state.imageMode)
         }
     }
 

@@ -141,6 +141,26 @@ async function setDefaultHoldDiameter(holdDiameter) {
     }
 }
 
+async function chooseWall(wallId) {
+    let urlParams = getUrlParams()
+    try {
+        GlobalState.loading = true
+        await loadRoutesAndHolds(true, wallId)
+        updateUrlParams({wall: GlobalState.selectedWall.name})
+
+        if (urlParams.route != null) {
+            let route = GlobalState.routes.find(r => r.id === urlParams.route)
+            if (route != null) {
+                await enterRoutePage(route)
+            }
+        } else if (urlParams.configuring != null) {
+            await enterConfigureHoldsPage()
+        }
+    } finally {
+        GlobalState.loading = false
+    }
+}
+
 /** @param route {Route} */
 async function enterRoutePage(route) {
     GlobalState.selectedRoute = route
@@ -281,6 +301,7 @@ export {
     WallImage,
     exitWall,
     loadRoutesAndHolds,
+    chooseWall,
     enterRoutePage,
     exitRoutePage,
     updateTheme,

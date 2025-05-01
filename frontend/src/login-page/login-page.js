@@ -1,5 +1,5 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
-import {GlobalState} from "../state.js";
+import {chooseWall, GlobalState} from "../state.js";
 import {Api} from "../api.js"
 import "../components/text-input.js"
 import "../components/x-button.js"
@@ -32,6 +32,13 @@ createYoffeeElement("login-page", (props, self) => {
         GlobalState.user = user
         await new Promise(res => requestAnimationFrame(() => res())) // This is for loader to show up
         GlobalState.walls = await Api.getWalls()
+        let urlParams = getUrlParams()
+        if (urlParams.wall != null) {
+            let wall = GlobalState.walls.find(wall => wall.name === urlParams.wall)
+            if (wall != null) {
+                chooseWall(wall.id)
+            }
+        }
     }
 
     let user

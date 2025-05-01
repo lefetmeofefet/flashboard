@@ -144,13 +144,17 @@ createYoffeeElement("single-route-page", (props, self) => {
     let nextRoute = () => {
         let filteredRoutes = getFilteredRoutes()
         let nextRoute = filteredRoutes.indexOf(props.route) + 1
-        nextRoute = nextRoute % filteredRoutes.length
+        if (nextRoute >= filteredRoutes.length) {
+            nextRoute = 0
+        }
         return filteredRoutes[nextRoute]
     }
     let previousRoute = () => {
         let filteredRoutes = getFilteredRoutes()
         let nextRoute = filteredRoutes.indexOf(props.route) - 1
-        nextRoute = nextRoute % filteredRoutes.length
+        if (nextRoute < 0) {
+            nextRoute = filteredRoutes.length - 1
+        }
         return filteredRoutes[nextRoute]
     }
     const onSwipe = x => {
@@ -626,7 +630,10 @@ createYoffeeElement("single-route-page", (props, self) => {
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${async () => {
-            if (await showConfirm(`Delete route ${props.route.name}?`)) {
+            if (await showConfirm(
+                `Delete route ${props.route.name}?`, 
+                {options: {icon: "warning"}}
+            )) {
                 await Api.deleteRoute(props.route.id)
                 await exitRoutePage()
             }
