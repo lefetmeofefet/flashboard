@@ -9,7 +9,7 @@
 #include <esp_bt_device.h>
 
 #define NUM_LEDS 1000
-#define DATA_PIN 19
+#define DATA_PIN 16
 
 Preferences preferences;
 CRGB leds[NUM_LEDS];
@@ -75,7 +75,7 @@ class MessageCallbacks : public BLECharacteristicCallbacks {
       response["brightness"] = getBrightness();
       response["wallName"] = getWallName();
       String macAddress = getBluetoothMACAddress();
-      response["id"] = macAdress;
+      response["id"] = macAddress;
       response["macAddress"] = macAddress;
       response["ledBoxId"] = macAddress;
       response["command"] = "wallInfo";
@@ -89,9 +89,13 @@ class MessageCallbacks : public BLECharacteristicCallbacks {
       JSONVar ledsList = message["leds"];
 
       // Turn off all leds
-      for (int i=0; i<NUM_LEDS; i++) {
-        leds[i] = CRGB(0, 0, 0);
+      bool keepExistingLeds = message.hasOwnProperty("keepExistingLeds") && (bool)message["keepExistingLeds"];
+      if (!keepExistingLeds){
+        for (int i=0; i<NUM_LEDS; i++) {
+          leds[i] = CRGB(0, 0, 0);
+        }
       }
+      
       // Turn on route leds
       for (int i=0; i<ledsList.length(); i++) {
         JSONVar ledGroup = ledsList[i];
