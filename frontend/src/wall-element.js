@@ -343,7 +343,8 @@ createYoffeeElement("wall-element", (props, self) => {
              style="${() => `
                 left: ${hold.x * 100}%;
                 /*bottom: {self.offsetHeight * hold.y}px;  this is because some browsers fuck percentages because of search bars etc. */
-                bottom: ${hold.y * 100}%;
+                /* iphone doesnt care about the 2% margin in the height calculation, cause apple are idiots. so we compensate here */
+                bottom: ${hold.y * 100 * (window.isIOS ? 0.96 : 1)}%;
                 width: ${(hold.diameter || GlobalState.defaultHoldDiameter) * (imageElement?.width / 100) * (hold.inRoute ? 1.2 : 1)}px;
                 height: ${(hold.diameter || GlobalState.defaultHoldDiameter) * (imageElement?.width / 100) * (hold.inRoute ? 1.2 : 1)}px;
              `}"

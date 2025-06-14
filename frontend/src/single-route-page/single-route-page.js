@@ -244,6 +244,18 @@ createYoffeeElement("single-route-page", (props, self) => {
         }, animationDurationSeconds * 1000)
     }
 
+    const enterEditMode = async () => {
+        if (GlobalState.user.id === setterId() || isAdmin()) {
+            state.editMode = true
+            if (!localStorage.getItem("edit-holds-toasted")) {
+                localStorage.setItem("edit-holds-toasted", "true")
+                showToast("Click holds to edit the route, long press to remove hold")
+            }
+        } else {
+            showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
+        }
+    }
+
     return html(GlobalState, state, props, props.route || {})`
 <style>
     :host {
@@ -570,17 +582,7 @@ createYoffeeElement("single-route-page", (props, self) => {
     
     <x-button id="edit-button"
               active=${() => state.editMode}
-              onclick=${async () => {
-                  if (GlobalState.user.id === setterId() || isAdmin()) {
-                      state.editMode = true
-                      if (!localStorage.getItem("edit-holds-toasted")) {
-                          localStorage.setItem("edit-holds-toasted", "true")
-                          showToast("Click holds to edit the route, long press to remove hold")
-                      }
-                  } else {
-                      showAlert(`Cannot change route, owner is ${props.route.setters[0]?.nickname}`)
-                  }
-              }}>
+              onclick=${() => enterEditMode()}>
         <x-icon icon="fa fa-edit"></x-icon>
     </x-button>
     
@@ -628,8 +630,13 @@ createYoffeeElement("single-route-page", (props, self) => {
         ${() => allowedToChange && html()`
         <x-button slot="dialog-item"
                   onclick=${() => self.shadowRoot.querySelector("#route-name-input")?.focus()}>
+            <x-icon icon="fa fa-font" style="width: 20px;"></x-icon>
+            Rename route
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${() => enterEditMode()}>
             <x-icon icon="fa fa-edit" style="width: 20px;"></x-icon>
-            Edit route name
+            Edit route
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${async () => {

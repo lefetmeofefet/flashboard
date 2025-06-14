@@ -474,6 +474,14 @@ ${() => WallImage == null && html()`
         </x-button>
     </div>
     
+    ${() => state.selectedHold != null && html()`
+    <x-button slot="dialog-item"
+              onclick=${() => console.log("brrrrr")}>
+        <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
+        Wall: Default 
+    </x-button>
+    `}
+    
     <x-button slot="dialog-item"
               onclick=${() => showAlert("Coming soon!")}>
         <x-icon icon="fa fa-paint-brush" style="width: 20px;"></x-icon>
