@@ -9,7 +9,12 @@ import "../components/x-tag.js"
 import {uploadImage} from "../header.js";
 
 function getLatestLedId() {
-    let ledIds = GlobalState.holds.map(hold => hold.ledId).filter(ledId => ledId != null)
+    let ledIds = []
+    for (let hold of GlobalState.holds) {
+        for (let ledId of hold.ledIds) {
+            ledIds.push(ledId)
+        }
+    }
     if (ledIds.length === 0) {
         return 0
     }
@@ -123,18 +128,15 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         }
     }
 
-    async function setHoldLedId(hold, ledId) {
-        if (ledId == null && !await showConfirm("Unlink the LED from the hold?", {text: "You can reassign any LED later"})) {
-            return
-        }
+    async function setHoldLedIds(hold, ledIds) {
         if (updatingLED) {
             return
         }
         updatingLED = true
         try {
             await unselectHold(hold)
-            await Api.setHoldLed(hold.id, ledId)
-            hold.ledId = ledId
+            await Api.setHoldLeds(hold.id, ledIds)
+            hold.ledIds = ledIds
             await toggleHold(hold)
         } finally {
             updatingLED = false
@@ -183,6 +185,7 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     }
     
     #led-config-container {
+        min-width: fit-content;
         display: flex;
         align-items: center;
         overflow: hidden;
@@ -222,14 +225,14 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         text-align: center;
     }
     
-    #led-config-container > #unlink-led-button {
-        padding: 5px 0;
-        gap: 5px;
+    #unlink-led-button {
+        padding: 5px 0 5px 7px;
         font-size: 16px;
         margin-right: 10px;
-        margin-left: auto;
         width: fit-content;
         box-shadow: none;
+        border-left: 1px solid var(--text-color-on-secondary-weak);
+        border-radius: 0;
     }
     
     wall-element {
@@ -347,22 +350,17 @@ ${() => WallImage == null && html()`
                   showconfirmbutton=${() => state.editingLedId}
                   xbuttonclicked=${() => () => toggleHold(state.selectedHold)}>
     <div id="title" 
-         slot="title">
+         slot="title"
+         style="overflow: auto;">
         ${() => state.selectedHold == null && html()`<div id="title-text">${() => state.editingHoldsMode ? "Tap anywhere to set hold" : "Configuring wall"}</div>`}
         ${() => state.selectedHold != null && html(state.selectedHold)`
         <div id="led-config-container">
-            ${() => state.selectedHold?.ledId == null ? html()`
-            <x-button id="assign-led-button"
-                      onclick=${() => setHoldLedId(state.selectedHold, getLatestLedId())}>
-                Assign LED
-                <x-icon icon="fa fa-lightbulb"></x-icon>
-            </x-button>
-            ` : html()`
-            <div>LED:</div>
+            ${() => state.selectedHold.ledIds.length > 0 && html()`<div>LEDs:</div>`}
             
+            ${() => state.selectedHold.ledIds.map(ledId => html()`
             <div id="led-input-container">
                 <x-button class="cycle-led-button"
-                          onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId - 1)}>
+                          onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), ledId - 1])}>
                     <x-icon icon="fa fa-caret-left"></x-icon>
                 </x-button>
                 <text-input id="led-id-input"
@@ -371,10 +369,10 @@ ${() => WallImage == null && html()`
                             pattern="\d+"
                             class="header-input"
                             slot="title"
-                            value=${() => state.selectedHold?.ledId}
+                            value=${() => ledId}
                             changed=${() => async () => {
                                 let ledId = self.shadowRoot.querySelector("#led-id-input").getValue()
-                                setHoldLedId(state.selectedHold, parseInt(ledId))
+                                await setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), parseInt(ledId)])
                             }}
                             onblur=${() => state.editingLedId = false}
                             onfocus=${e => {
@@ -385,16 +383,25 @@ ${() => WallImage == null && html()`
                             }}
                 ></text-input>
                 <x-button class="cycle-led-button"
-                          onclick=${() => setHoldLedId(state.selectedHold, state.selectedHold.ledId + 1)}>
+                          onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), ledId + 1])}>
                     <x-icon icon="fa fa-caret-right"></x-icon>
                 </x-button>
+                <x-button id="unlink-led-button"
+                      onclick=${async () => {
+                            if (await showConfirm("Unlink the LED from the hold?", {text: "You can reassign any LED later"})) {
+                                await setHoldLedIds(state.selectedHold, state.selectedHold.ledIds.filter(id => id !== ledId))
+                            }
+                        }}>
+                <x-icon icon="fa fa-times"></x-icon>
+            </x-button>
             </div>
             
-            <x-button id="unlink-led-button"
-                      onclick=${() => setHoldLedId(state.selectedHold, null)}>
-                <x-icon icon="fa fa-unlink"></x-icon>
+            `)}
+            <x-button id="assign-led-button"
+                      onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds, getLatestLedId()])}>
+                ${() => state.selectedHold.ledIds.length === 0 ? "Assign LED" : "Add LED"}
+                <x-icon icon="fa fa-lightbulb"></x-icon>
             </x-button>
-            `}
         </div>
         `}
     </div>

@@ -98,7 +98,7 @@ router.post('/login', async (req, res) => {
 
     let user = await getUserByEmail(email)
     if (user == null) {
-        res.status(404).json({error: ERROR_MESSAGES.NO_USER_WITH_EMAIL, errorMessage: "There is no user with this email"})
+        res.status(404).json({error: ERROR_MESSAGES.NO_USER_WITH_EMAIL, errorMessage: "There is no user with this username"})
         return
     }
     if (user.authMethod !== AUTH_METHODS.email) {

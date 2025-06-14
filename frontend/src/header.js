@@ -10,7 +10,7 @@ import "./components/x-button.js"
 import "./components/x-icon.js"
 import "./components/x-tag.js"
 import {Api} from "./api.js";
-import {showPrompt, showToast} from "../utilz/popups.js";
+import {showConfirm, showPrompt, showToast} from "../utilz/popups.js";
 import {loadFile} from "../utilz/load-file.js";
 import {Bluetooth} from "./bluetooth.js";
 import {enterFullscreen, exitFullscreen, isFullScreen} from "../utilz/fullscreen.js";
@@ -457,6 +457,26 @@ ${() => GlobalState.selectedWall != null && html()`
             <x-icon icon="fab fa-discord"></x-icon>
             Contact Us
         </x-button>
+        
+        ${() => GlobalState.selectedWall == null && html()`
+        <x-button class="settings-item"
+                  id="delete-account"
+                  onclick=${async () => {
+                        let shouldDelete = await showConfirm("Are you sure you want to delete this account? This is irreversible.", {
+                            confirmButtonColor: "red",
+                            options: {
+                                icon: "warning",
+                            }
+                        })
+                        if (shouldDelete) {
+                            await Api.deleteAccount()
+                            window.location.reload()
+                        }
+                    }}>
+            <x-icon icon="fa fa-times""></x-icon>
+            Delete Account
+        </x-button>
+        `}
     </div>
 </x-dialog>
 `

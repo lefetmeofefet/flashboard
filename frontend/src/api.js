@@ -86,6 +86,10 @@ async function signUp(email, password) {
     return await post("/auth/signUp", {email, password})
 }
 
+async function deleteAccount() {
+    return await post("/api/deleteAccount", {})
+}
+
 async function setNickname(nickname) {
     return await post("/api/setNickname", {nickname})
 }
@@ -195,8 +199,8 @@ async function createHold(x, y) {
     return await post("/api/createHold", {wallId: GlobalState.selectedWall.id, x, y})
 }
 
-async function setHoldLed(holdId, ledId) {
-    return await post("/api/setHoldLed", {wallId: GlobalState.selectedWall.id, holdId, ledId})
+async function setHoldLeds(holdId, ledIds) {
+    return await post("/api/setHoldLeds", {wallId: GlobalState.selectedWall.id, holdId, ledIds})
 }
 
 async function moveHold(holdId, x, y) {
@@ -249,7 +253,7 @@ const Api = {
     updateLikedStatus,
     deleteRoute,
     createHold,
-    setHoldLed,
+    setHoldLeds,
     moveHold,
     deleteHold,
     addHoldToRoute,
@@ -261,7 +265,8 @@ const Api = {
     signUp,
     setNickname,
     signOut,
-    setWallAdmin
+    setWallAdmin,
+    deleteAccount
 }
 
 export {Api}

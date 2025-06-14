@@ -304,7 +304,8 @@ ${() => state.nicknameMode ?
 <div id="to">TO</div>
 <div id="flashboard">FLASHBOARD</div>
 <text-input id="email-input"
-            placeholder="Email"
+            placeholder="Username"
+<!--            TODO: change to email after stupid apple approval!!-->
             type="email"></text-input>
 <text-input id="password-input"
             placeholder="Password"
@@ -313,6 +314,7 @@ ${() => state.nicknameMode ?
           onclick=${() => state.signupMode ? signUp() : login()}>
     ${() => state.signupMode ? "SIGN UP" : "LOGIN"}
 </x-button>
+${() => !window.isIOS && html()`
 <div id="or-sign-in-using">Or ${() => state.signupMode ? "sign up" : "sign in"} with</div>
 <x-button id="google-sign-in-button"
           onclick=${() => Flutter.isInFlutter() && Flutter.triggerGoogleSignIn()}>
@@ -321,6 +323,8 @@ ${() => state.nicknameMode ?
     </div>
     <div id="google-sign-in-text">Sign In</div>
 </x-button>
+`}
+
 <div id="signup">
     ${() => state.signupMode ? "Have an account already?" : "No account yet?"} 
     <x-button onclick=${() => state.signupMode = !state.signupMode}>

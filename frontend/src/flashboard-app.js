@@ -25,7 +25,7 @@ import {showAlert} from "../utilz/popups.js";
 createYoffeeElement("flashboard-app", (props, self) => {
     let state = {
         showAppLinks: localStorage.getItem("no-app-store-links") == null
-    };
+    }
     window.showPrivacyPolicy = () => {
         GlobalState.showPrivacyPolicy = true
         self.shadowRoot.querySelector("#privacy-policy-dialog").open("center")

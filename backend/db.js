@@ -48,11 +48,6 @@ async function readNeo4j(query, params) {
     )
 }
 
-async function readNeo4jSingleResult(query, params) {
-    let results = await readNeo4j(query, params)
-    return results[0]
-}
-
 function generateCode(length = 8) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     let result = ''
@@ -225,11 +220,12 @@ async function getRoutes(wallId, whereClause, parameters) {
            route.name as name, 
            route.grade as grade,
            route.starsAvg as starsAvg,
+           route.numRatings as numRatings,
            route.type as type,
            route.lists as lists,
            sends as sends,
            [setter IN setters | {id: setter.id, nickname: setter.nickname}] AS setters,
-           [i IN range(0, size(holds) - 1) | {id: holds[i].id, ledId: holds[i].ledId, holdType: holdEdges[i].holdType}] AS holds
+           [i IN range(0, size(holds) - 1) | {id: holds[i].id, ledIds: holds[i].ledIds, holdType: holdEdges[i].holdType}] AS holds
     ORDER BY route.createdAt ASC
     `, {wallId, ...(parameters || {})}
     )
@@ -249,6 +245,7 @@ async function createRoute(wallId, setterId) {
         createdAt: timestamp(),
         name: "I AM ROUTE",
         starsAvg: 0,
+        numRatings: 0,
         grade: 3,
         lists: [],
         type: "${ROUTE_TYPES.ALL_HOLDS}"
@@ -260,6 +257,7 @@ async function createRoute(wallId, setterId) {
            route.name as name, 
            route.grade as grade,
            route.starsAvg as starsAvg,
+           route.numRatings as numRatings,
            route.type as type,
            route.lists as lists,
            0 as sends,
@@ -351,10 +349,11 @@ async function starRoute(wallId, userId, routeId, stars) {
     SET e.stars = $stars
     
     WITH route
-    MATCH (route:Route{id: $routeId}) <-[e:starred]- (:User)
-    WITH route, avg(e.stars) AS starsAvg
-    SET route.starsAvg = starsAvg
-    RETURN starsAvg
+    MATCH (route) <-[e:starred]- (:User)
+    WITH route, avg(e.stars) AS starsAvg, count(e) as numRatings
+    SET route.starsAvg = starsAvg,
+        route.numRatings = numRatings
+    RETURN starsAvg, numRatings
     `, {wallId, userId, routeId, stars})
 }
 
@@ -377,7 +376,7 @@ async function getHolds(wallId) {
     return await readNeo4j(`
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold)
     RETURN hold.id as id,
-           hold.ledId as ledId,
+           hold.ledIds as ledIds,
            hold.x as x,
            hold.y as y
     `, {wallId})
@@ -392,21 +391,25 @@ async function createHold(wallId, x, y) {
         id: randomUUID(),
         x: $x,
         y: $y,
-        ledId: NULL
+        ledIds: []
     })
     CREATE (wall) -[:has]-> (hold)
     RETURN hold.id as id,
-           hold.ledId as ledId,
+           hold.ledIds as ledIds,
            hold.x as x,
            hold.y as y
     `, {wallId, x, y})
 }
 
-async function setHoldLed(wallId, holdId, ledId) {
+async function setHoldLeds(wallId, holdId, ledIds) {
+    let ledIdParams = {}
+    for (let i = 0; i < ledIds.length; i += 1) {
+        ledIdParams["list_item_" + i] = ledIds[i]
+    }
     await queryNeo4j(`
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold{id: $holdId})
-    SET hold.ledId = $ledId
-    `, {wallId, holdId, ledId})
+    SET hold.ledIds = [${ledIds.map((_, index) => "$list_item_" + index).join(", ")}]
+    `, {wallId, holdId, ...ledIdParams})
 }
 
 async function moveHold(wallId, holdId, x, y) {
@@ -479,6 +482,14 @@ async function getUserById(userId) {
     `, {userId}, {routing: neo4j.routing.READ})
 }
 
+/** @returns {User} */
+async function deleteAccount(userId) {
+    await queryNeo4jSingleResult(`
+    MATCH (user:User{id: $userId})
+    DETACH DELETE user
+    `, {userId}, {routing: neo4j.routing.WRITE})
+}
+
 async function convertUserToGoogle(email, googleId) {
     return await queryNeo4jSingleResult(`
     MATCH (user:User{email: $email})
@@ -532,7 +543,7 @@ export {
     deleteRoute,
     getHolds,
     createHold,
-    setHoldLed,
+    setHoldLeds,
     moveHold,
     deleteHold,
     addHoldToRoute,
@@ -540,5 +551,6 @@ export {
     starRoute,
     closeConnection,
     setWallAdmin,
-    getRouteSenders
+    getRouteSenders,
+    deleteAccount
 }

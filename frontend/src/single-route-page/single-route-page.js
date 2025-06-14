@@ -198,9 +198,10 @@ createYoffeeElement("single-route-page", (props, self) => {
         let dragSpeedToSwipe = 5
         if (Math.abs(lastXDiff) >= dragSpeedToSwipe) {
             // If we swiped fast
-            if (lastXDiff < 0) {
+            if (lastXDiff < 0 && lastX < 0) {
                 swipeDirection = "left"
-            } else {
+            }
+            if (lastXDiff > 0 && lastX > 0) {
                 swipeDirection = "right"
             }
         } else if (Math.abs(lastX) > self.offsetWidth * 0.5) {
@@ -550,10 +551,12 @@ createYoffeeElement("single-route-page", (props, self) => {
     <x-dialog id="stars-dialog"
               class="header-dialog">
         <x-rating rating=${() => props.route?.userStars}
+                  raters=${() => props.route?.numRatings}
                   picked=${() => async stars => {
                       props.route.userStars = stars
                       let response = await Api.starRoute(props.route.id, stars)
                       props.route.starsAvg = response.starsAvg
+                      props.route.numRatings = response.numRatings
                       GlobalState.selectedWall.starredRoutes[props.route.id] = stars
                       requestAnimationFrame(() => self.shadowRoot.querySelector("#stars-dialog").close())
                   }}></x-rating>

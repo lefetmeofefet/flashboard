@@ -25,9 +25,9 @@ import {
     isMacAddressLinkedToWall,
     setWallMacAddress,
     deleteWall,
-    setHoldLed,
+    setHoldLeds,
     setWallAdmin,
-    getRouteSenders, setWallDefaultHoldDiameter
+    getRouteSenders, setWallDefaultHoldDiameter, deleteAccount
 } from "../db.js";
 import express from "express";
 
@@ -36,6 +36,11 @@ const router = express.Router()
 router.post('/getUser', async (req, res) => {
     let user = await getUserById(req.userId)
     res.json(user)
+})
+
+router.post('/deleteAccount', async (req, res) => {
+    await deleteAccount(req.userId)
+    res.json({status: 'success'})
 })
 
 router.post('/setNickname', async (req, res) => {
@@ -163,10 +168,10 @@ router.post('/createHold', async (req, res) => {
     })
 })
 
-router.post('/setHoldLed', async (req, res) => {
-    const {wallId, holdId, ledId} = req.body
+router.post('/setHoldLeds', async (req, res) => {
+    const {wallId, holdId, ledIds} = req.body
     res.json({
-        hold: await setHoldLed(wallId, holdId, ledId)
+        hold: await setHoldLeds(wallId, holdId, ledIds)
     })
 })
 
@@ -198,7 +203,8 @@ router.post('/starRoute', async (req, res) => {
     const {wallId, routeId, stars} = req.body
     let result = await starRoute(wallId, req.userId, routeId, stars)
     res.json({
-        starsAvg: result.starsAvg
+        starsAvg: result.starsAvg,
+        numRatings: result.numRatings,
     })
 })
 

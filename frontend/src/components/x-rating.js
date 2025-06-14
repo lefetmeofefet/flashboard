@@ -18,6 +18,11 @@ customElements.define("x-rating", class extends YoffeeElement {
                     font-size: var(--font-size, 14px);
                 }
                 
+                #raters {
+                    font-size: var(--star-size, 16px);
+                    color: var(--text-color-weak-1, #ffffff70);
+                }
+                
                 x-icon {
                     font-size: var(--star-size, 16px);
                     cursor: pointer;
@@ -30,11 +35,11 @@ customElements.define("x-rating", class extends YoffeeElement {
                 }
             </style>
             
-            ${() => this.props.onestar ? html()`
+            ${() => this.props.onestar ? (html()`
             <div id="rating">${() => parseFloat(this.props.rating).toPrecision(2)}</div>
             <x-icon icon="fa fa-star" 
                     golden></x-icon>
-            ` : [1, 2, 3, 4, 5]
+            `) : [1, 2, 3, 4, 5]
                     .filter(starNum => !this.props.onlyactive || starNum <= parseFloat(this.props.rating) + 0.5)
                     .map(starNum => html()`
             <x-icon icon="fa fa-star"
@@ -50,6 +55,10 @@ customElements.define("x-rating", class extends YoffeeElement {
             </x-icon>
             `)
             }
+            
+            ${() => this.props.raters != null && this.props.raters > 0 && html()`
+            <div id="raters">(${() => this.props.raters})</div>
+            `}
         `
     }
 });

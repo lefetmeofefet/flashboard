@@ -159,6 +159,7 @@ ${() => {
     </div>
     
     <x-rating rating=${() => route.starsAvg}
+              raters=${() => route.numRatings}
               onlyactive></x-rating>
     
     <div class="grade">V${() => route.grade}</div>

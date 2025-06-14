@@ -284,6 +284,14 @@ function getLedRGB(isOn, holdType) {
 }
 
 async function highlightRoute(route) {
+    let ledGroups = createLedGroups(route.holds)
+    await sendBTMessage({
+        command: "setLeds",
+        leds: ledGroups
+    })
+}
+
+function createLedGroups(holds) {
     let normalLedGroup = getLedRGB(true)
     let startLedGroup = getLedRGB(true, "start")
     let footLedGroup = getLedRGB(true, "foot")
@@ -292,21 +300,20 @@ async function highlightRoute(route) {
     startLedGroup.i = []
     footLedGroup.i = []
     finishLedGroup.i = []
-    for (let hold of route.holds.filter(h => h.ledId != null)) {
-        if (hold.holdType === "start") {
-            startLedGroup.i.push(hold.ledId)
-        } else if (hold.holdType === "foot") {
-            footLedGroup.i.push(hold.ledId)
-        } else if (hold.holdType === "finish") {
-            finishLedGroup.i.push(hold.ledId)
-        } else {
-            normalLedGroup.i.push(hold.ledId)
+    for (let hold of holds) {
+        for (let ledId of hold.ledIds) {
+            if (hold.holdType === "start") {
+                startLedGroup.i.push(ledId)
+            } else if (hold.holdType === "foot") {
+                footLedGroup.i.push(ledId)
+            } else if (hold.holdType === "finish") {
+                finishLedGroup.i.push(ledId)
+            } else {
+                normalLedGroup.i.push(ledId)
+            }
         }
     }
-    await sendBTMessage({
-        command: "setLeds",
-        leds: [normalLedGroup, startLedGroup, footLedGroup, finishLedGroup].filter(ledGroup => ledGroup.i.length > 0)
-    })
+    return [normalLedGroup, startLedGroup, footLedGroup, finishLedGroup].filter(ledGroup => ledGroup.i.length > 0)
 }
 
 async function setLeds(ledGroups) {
@@ -323,16 +330,12 @@ async function clearLeds() {
 }
 
 async function setHoldState(hold) {
-    if (hold.ledId != null) {
-        await sendBTMessage({
-            command: "setLed",
-            snakeMode: false,
-            led: {
-                ...getLedRGB(hold.inRoute, hold.holdType),
-                i: hold.ledId
-            }
-        })
-    }
+    let ledGroups = createLedGroups([hold])
+    await sendBTMessage({
+        command: "setLeds",
+        leds: ledGroups,
+        keepExistingLeds: true
+    })
 }
 
 async function setSnakeModeLed(r, g, b, i) {
