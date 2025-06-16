@@ -225,7 +225,12 @@ async function getRoutes(wallId, whereClause, parameters) {
            route.lists as lists,
            sends as sends,
            [setter IN setters | {id: setter.id, nickname: setter.nickname}] AS setters,
-           [i IN range(0, size(holds) - 1) | {id: holds[i].id, ledIds: holds[i].ledIds, holdType: holdEdges[i].holdType}] AS holds
+           [i IN range(0, size(holds) - 1) | {
+               id: holds[i].id, 
+               ledIds: holds[i].ledIds,
+               group: holds[i].group, 
+               holdType: holdEdges[i].holdType
+           }] AS holds
     ORDER BY route.createdAt ASC
     `, {wallId, ...(parameters || {})}
     )
@@ -377,6 +382,7 @@ async function getHolds(wallId) {
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold)
     RETURN hold.id as id,
            hold.ledIds as ledIds,
+           hold.group as group,
            hold.x as x,
            hold.y as y
     `, {wallId})
@@ -396,6 +402,7 @@ async function createHold(wallId, x, y) {
     CREATE (wall) -[:has]-> (hold)
     RETURN hold.id as id,
            hold.ledIds as ledIds,
+           hold.group as group,
            hold.x as x,
            hold.y as y
     `, {wallId, x, y})
@@ -410,6 +417,13 @@ async function setHoldLeds(wallId, holdId, ledIds) {
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold{id: $holdId})
     SET hold.ledIds = [${ledIds.map((_, index) => "$list_item_" + index).join(", ")}]
     `, {wallId, holdId, ...ledIdParams})
+}
+
+async function setHoldGroup(wallId, holdId, group) {
+    await queryNeo4j(`
+    MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold{id: $holdId})
+    SET hold.group = $group
+    `, {wallId, holdId, group})
 }
 
 async function moveHold(wallId, holdId, x, y) {
@@ -544,6 +558,7 @@ export {
     getHolds,
     createHold,
     setHoldLeds,
+    setHoldGroup,
     moveHold,
     deleteHold,
     addHoldToRoute,

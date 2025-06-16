@@ -203,6 +203,10 @@ async function setHoldLeds(holdId, ledIds) {
     return await post("/api/setHoldLeds", {wallId: GlobalState.selectedWall.id, holdId, ledIds})
 }
 
+async function setHoldGroup(holdId, group) {
+    return await post("/api/setHoldGroup", {wallId: GlobalState.selectedWall.id, holdId, group})
+}
+
 async function moveHold(holdId, x, y) {
     return await post("/api/moveHold", {wallId: GlobalState.selectedWall.id, holdId, x, y})
 }
@@ -254,6 +258,7 @@ const Api = {
     deleteRoute,
     createHold,
     setHoldLeds,
+    setHoldGroup,
     moveHold,
     deleteHold,
     addHoldToRoute,
@@ -266,7 +271,7 @@ const Api = {
     setNickname,
     signOut,
     setWallAdmin,
-    deleteAccount
+    deleteAccount,
 }
 
 export {Api}

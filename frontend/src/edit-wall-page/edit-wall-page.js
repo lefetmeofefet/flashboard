@@ -203,6 +203,18 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         font-size: 18px;
     }
     
+    #configure-hold-button {
+        margin-left: auto;
+        transition: 300ms;
+        color: var(--text-color-on-secondary);
+        cursor: pointer;
+        padding: 10px 0 10px 10px;;
+        font-size: 18px;
+        border-bottom: 3px solid #00000000;
+        display: flex;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
     #led-config-container > #led-input-container {
         display: flex;
         align-items: center;
@@ -371,8 +383,8 @@ ${() => WallImage == null && html()`
                             slot="title"
                             value=${() => ledId}
                             changed=${() => async () => {
-                                let ledId = self.shadowRoot.querySelector("#led-id-input").getValue()
-                                await setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), parseInt(ledId)])
+                                let newLedId = self.shadowRoot.querySelector("#led-id-input").getValue()
+                                await setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), parseInt(newLedId)])
                             }}
                             onblur=${() => state.editingLedId = false}
                             onfocus=${e => {
@@ -395,7 +407,6 @@ ${() => WallImage == null && html()`
                 <x-icon icon="fa fa-times"></x-icon>
             </x-button>
             </div>
-            
             `)}
             <x-button id="assign-led-button"
                       onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds, getLatestLedId()])}>
@@ -403,6 +414,46 @@ ${() => WallImage == null && html()`
                 <x-icon icon="fa fa-lightbulb"></x-icon>
             </x-button>
         </div>
+        <div id="configure-hold-button"
+             tabindex="0"
+             onkeydown=${() => e => e.stopPropagation()}
+             onmousedown=${() => () => {
+                let _dropdown = self.shadowRoot.querySelector("#hold-settings-dialog")
+                let _button = self.shadowRoot.querySelector("#hold-settings-button")
+                _dropdown.toggle(_button, true)
+            }}
+              onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#hold-settings-dialog").close())}>>
+            <x-icon icon="fa fa-cog"></x-icon>
+        </div>
+        <x-dialog id="hold-settings-dialog">
+            <div id="hold-settings-container">
+                <x-button slot="dialog-item"
+                          onclick=${async () => {
+                            let holdGroup = await showPrompt(
+                                "Set the wall hold group for this hold",
+                                {
+                                    text: "Wall hold groups are used used for differentiating between multiple walls, for example if you have two boards and want to control both with the same controller and app. Routes in one wall will not vanish routes from other walls when switched.",
+                                    placeholder: "Leave empty for default",
+                                    label: "Wall name:",
+                                    value: state.selectedHold.group,
+                                    confirmButtonText: "Set wall"
+                                }
+                            )
+                    
+                            if (holdGroup != null) {
+                                if (holdGroup === "") {
+                                    await Api.setHoldGroup(state.selectedHold.id, null)
+                                } else {
+                                    await Api.setHoldGroup(state.selectedHold.id, holdGroup)
+                                }
+                                state.selectedHold.group = holdGroup
+                            }
+                        }}>
+                    <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
+                    Wall: ${() => state.selectedHold.group || "Default"}
+                </x-button>
+            </div>
+        </x-dialog>
         `}
     </div>
     
@@ -476,9 +527,29 @@ ${() => WallImage == null && html()`
     
     ${() => state.selectedHold != null && html()`
     <x-button slot="dialog-item"
-              onclick=${() => console.log("brrrrr")}>
+              onclick=${async () => {
+                  let holdGroup = await showPrompt(
+                      "Set the wall hold group for this hold",
+                      {
+                          text: "Wall hold groups are used used for differentiating between multiple walls, for example if you have two boards and want to control both with the same controller and app. Routes in one wall will not vanish routes from other walls when switched.",
+                          placeholder: "Leave empty for default",
+                          label: "Wall name:",
+                          value: state.selectedHold.group,
+                          confirmButtonText: "Set wall"
+                      }
+                  )
+                  
+                  if (holdGroup != null) {
+                      if (holdGroup === "") {
+                          await Api.setHoldGroup(state.selectedHold.id, null)
+                      } else {
+                          await Api.setHoldGroup(state.selectedHold.id, holdGroup)
+                      }
+                      state.selectedHold.group = holdGroup
+                  }
+            }}>
         <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
-        Wall: Default 
+        Wall: ${() => state.selectedHold.group || "Default"}
     </x-button>
     `}
     

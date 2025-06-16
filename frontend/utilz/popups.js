@@ -27,10 +27,11 @@ async function showAlert(message, {confirmButtonText, confirmButtonColor, text, 
     })
 }
 
-async function showConfirm(message, {confirmButtonText, confirmButtonColor, options} = {}) {
+async function showConfirm(message, {confirmButtonText, confirmButtonColor, text, options} = {}) {
     let result = await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",
         title: message,
+        text: text,
         showDenyButton: false,
         showCancelButton: true,
         confirmButtonText: confirmButtonText || "Yes",
@@ -41,10 +42,11 @@ async function showConfirm(message, {confirmButtonText, confirmButtonColor, opti
     return result.isConfirmed
 }
 
-async function showPrompt(message, {type, placeholder, label, value, inputAttributes, confirmButtonText, confirmButtonColor, options} = {}) {
+async function showPrompt(message, {type, placeholder, label, value, inputAttributes, confirmButtonText, confirmButtonColor, text, options} = {}) {
     let result = await Swal.fire({
         theme: GlobalState.darkTheme ? "dark" : "light",
         title: message,
+        text: text,
         input: type || "text",
         inputLabel: label,
         inputPlaceholder: placeholder,

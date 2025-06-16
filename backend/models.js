@@ -57,6 +57,7 @@ class Hold {
         this.name = name
         this.inRoute = false
         this.holdType = ""
+        this.group = null
     }
 
     fromDb(dbObject) {

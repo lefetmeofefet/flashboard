@@ -1,5 +1,5 @@
 import {exitWall, GlobalState} from "./state.js";
-import {showAlert, showConfirm, showToast} from "../utilz/popups.js";
+import {showAlert, showConfirm, showPrompt, showToast} from "../utilz/popups.js";
 import {Api} from "./api.js";
 import {Flutter} from "./flutter-interface.js";
 
@@ -85,16 +85,21 @@ async function connectToWall(secondTry) {
     try {
         let wallName = await scanAndConnect(
             messageString => {
+                // Note: every bt client gets every message sent from the esp32, so if there's two phones connected,
+                // they both get each response
                 console.log('Received:', messageString)
                 let message = JSON.parse(messageString)
                 if (message.command === "wallInfo") {
-                    if (receiveWallInfo != null) {
-                        receiveWallInfo(message)
+                    if (receiveWallInfoPromiseResolver != null) {
+                        receiveWallInfoPromiseResolver(message)
+                        receiveWallInfoPromiseResolver = null
                     }
                 } else if (message.command === "killPlayer") {
                     window.onKillPlayer && window.onKillPlayer(message.color)
                 } else if (message.command === "playerAteApple") {
                     window.onPlayerAteApple && window.onPlayerAteApple(message.color)
+                } else if (message.command === "setLeds") {
+                    window.onRouteChangedBt && window.onRouteChangedBt(message.routeId)
                 }
             },
             () => {
@@ -253,13 +258,13 @@ async function setWallName(wallName) {
     })
 }
 
-let receiveWallInfo
+let receiveWallInfoPromiseResolver
 
 async function getWallInfo() {
     await sendBTMessage({
         command: "getInfo",
     })
-    return new Promise(resolve => receiveWallInfo = resolve)
+    return new Promise(resolve => receiveWallInfoPromiseResolver = resolve)
 }
 
 async function setWallBrightness(brightness) {
@@ -285,10 +290,48 @@ function getLedRGB(isOn, holdType) {
 
 async function highlightRoute(route) {
     let ledGroups = createLedGroups(route.holds)
-    await sendBTMessage({
-        command: "setLeds",
-        leds: ledGroups
-    })
+    let holdGroups = getHoldGroups(route.holds)
+    let allHoldGroups = getHoldGroups(GlobalState.holds)
+    if (allHoldGroups.size === 1) {
+        // If there's only one group, we just shut down all other LEDs
+        await sendBTMessage({
+            command: "setLeds",
+            leds: ledGroups,
+            routeId: route.id
+        })
+    } else {
+        // We shut down all holds in one of the groups the route is in
+        let allLedIdsToShutDown = new Set()
+        for (let hold of GlobalState.holds) {
+            // check if hold is in one of the groups, as long as the hold is not in the current route - then turn it off
+            if (holdGroups.has(hold.group || null) && route.holds.filter(h => h.id === hold.id).length === 0) {
+                for (let ledId of hold.ledIds || []) {
+                    allLedIdsToShutDown.add(ledId)
+                }
+            }
+        }
+        if (allLedIdsToShutDown.size > 0) {
+            ledGroups.push({r: 0, g: 0, b: 0, i: [...allLedIdsToShutDown]})
+        }
+        await sendBTMessage({
+            command: "setLeds",
+            keepExistingLeds: true,
+            leds: ledGroups,
+            routeId: route.id
+        })
+    }
+}
+
+function getHoldGroups(holds) {
+    let holdGroups = new Set()
+    for (let hold of holds) {
+        if (hold.group === undefined) {
+            holdGroups.add(null)
+        } else {
+            holdGroups.add(hold.group)
+        }
+    }
+    return holdGroups
 }
 
 function createLedGroups(holds) {
@@ -300,8 +343,13 @@ function createLedGroups(holds) {
     startLedGroup.i = []
     footLedGroup.i = []
     finishLedGroup.i = []
+    let notifyMissingLEDs = false
     for (let hold of holds) {
-        for (let ledId of hold.ledIds) {
+        let ledIds = hold.ledIds || []
+        if (ledIds.length === 0) {
+            notifyMissingLEDs = true
+        }
+        for (let ledId of ledIds) {
             if (hold.holdType === "start") {
                 startLedGroup.i.push(ledId)
             } else if (hold.holdType === "foot") {
@@ -312,6 +360,9 @@ function createLedGroups(holds) {
                 normalLedGroup.i.push(ledId)
             }
         }
+    }
+    if (notifyMissingLEDs) {
+        showToast(`${holds.length > 1 ? "Some of the holds in this route are" : "This hold is"} not associated with any LED bulbs`)
     }
     return [normalLedGroup, startLedGroup, footLedGroup, finishLedGroup].filter(ledGroup => ledGroup.i.length > 0)
 }

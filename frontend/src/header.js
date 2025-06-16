@@ -252,7 +252,13 @@ ${() => {
     let element = state.searchMode ? html()`
 <text-input id="search"
             onfocus=${e => !e.target.selected && e.target.select()}
-            oninput=${e => updateSearchDebounce(e.target.value)}>
+            oninput=${e => updateSearchDebounce(e.target.value)}
+            onblur=${() => {
+                if (state.searchMode && GlobalState.freeTextFilter == null) {
+                    state.searchMode = false
+                    updateSearch(null)
+                }
+            }}>
     <x-icon icon="fa fa-arrow-left"
             slot="before"
             onclick=${() => {
@@ -260,6 +266,7 @@ ${() => {
                 updateSearch(null)
             }}
     ></x-icon>
+    ${() => GlobalState.freeTextFilter != null && html()`
     <x-icon icon="fa fa-times"
             slot="after"
             onclick=${() => {
@@ -269,6 +276,7 @@ ${() => {
                 updateSearch(null)
             }}
     ></x-icon>
+    `}
 </text-input>
 ` : html()`
 <div id="title">

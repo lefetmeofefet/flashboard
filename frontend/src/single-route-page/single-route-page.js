@@ -21,6 +21,12 @@ createYoffeeElement("single-route-page", (props, self) => {
         highlightingRoute: GlobalState.autoLeds,
         editingLists: false,
     }
+    window.onRouteChangedBt = routeId => {
+        if (state.highlightingRoute && routeId !== GlobalState.selectedRoute.id) {
+            state.highlightingRoute = false
+        }
+    }
+
     let listsState = {}
     props.route?.lists?.forEach(list => listsState[list] = true)
 
@@ -126,7 +132,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                     }
                 } else {
                     await Api.addHoldToRoute(hold.id, props.route.id, hold.holdType)
-                    props.route.holds.push({id: hold.id, ledId: hold.ledId, holdType: hold.holdType})
+                    props.route.holds.push({id: hold.id, ledIds: hold.ledIds, holdType: hold.holdType})
                 }
             }
         } finally {
@@ -135,6 +141,10 @@ createYoffeeElement("single-route-page", (props, self) => {
     }
 
     self.onConnect = () => {
+
+    }
+
+    self.onDisconnect = () => {
 
     }
 
