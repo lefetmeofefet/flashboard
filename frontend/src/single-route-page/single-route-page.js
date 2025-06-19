@@ -22,7 +22,7 @@ createYoffeeElement("single-route-page", (props, self) => {
         editingLists: false,
     }
     window.onRouteChangedBt = routeId => {
-        if (state.highlightingRoute && routeId !== GlobalState.selectedRoute.id) {
+        if (state.highlightingRoute && routeId !== props.route.id) {
             state.highlightingRoute = false
         }
     }
@@ -117,7 +117,7 @@ createYoffeeElement("single-route-page", (props, self) => {
 
                 // Set Bluetooth LED
                 if (state.highlightingRoute) {
-                    await Bluetooth.setHoldState(hold)
+                    await Bluetooth.setHoldState(hold, props.route)
                 }
 
                 // Update DB
@@ -537,8 +537,7 @@ createYoffeeElement("single-route-page", (props, self) => {
               hideholds=${() => props.route == null}
               onclickhold=${e => holdClicked(e.detail.hold, e.detail.long)}
               onborderswipe=${e => onSwipe(e.detail.x)}
-              onborderswipeend=${() => onSwipeEnd()}
-              >
+              onborderswipeend=${() => onSwipeEnd()}>
 </wall-element>
 
 <div id="bottom-buttons">
@@ -661,15 +660,13 @@ createYoffeeElement("single-route-page", (props, self) => {
             <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
             Delete route
         </x-button>
+        `}
         <x-button slot="dialog-item"
-                  onclick=${async () => {
-            console.log("date pressed hmm?")
-        }}>
+                  onclick=${async () => console.log("date pressed hmm?")}>
             <x-icon icon="fa fa-clock" style="width: 20px;"></x-icon>
             Created ${() => dayjs(props.route?.createdAt).format('DD-MM-YY HH:mm:ss')}
         </x-button>
-        `}`
-    }
+    `}
 
     function renderEditLists() {
         return html()`

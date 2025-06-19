@@ -1,5 +1,5 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
-import {GlobalState, setDefaultHoldDiameter, WallImage} from "../state.js"
+import {GlobalState, WallImage} from "../state.js"
 import {Api} from "../api.js"
 import {showAlert, showConfirm, showPrompt, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
@@ -159,6 +159,20 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         }
     }
 
+    async function setHoldDiameter(hold, diameter) {
+        hold.diameter = diameter
+        await Api.setHoldDiameter(hold.id, diameter)
+    }
+
+    async function setDefaultHoldDiameter(holdDiameter) {
+        if (holdDiameter !== GlobalState.defaultHoldDiameter) {
+            GlobalState.selectedWall.defaultHoldDiameter = holdDiameter
+            GlobalState.defaultHoldDiameter = holdDiameter
+            // GlobalState.holds.forEach(h => h.diameter = GlobalState.selectedWall.defaultHoldDiameter)
+            await Api.setWallDefaultHoldDiameter(holdDiameter)
+        }
+    }
+
     return html(GlobalState, state)`
 <style>
     :host {
@@ -213,6 +227,44 @@ createYoffeeElement("edit-wall-page", (props, self) => {
         border-bottom: 3px solid #00000000;
         display: flex;
         -webkit-tap-highlight-color: transparent;
+    }
+    
+    #hold-settings-dialog {
+        padding: 20px 5px;
+        color: var(--text-color);
+        background-color: var(--background-color); 
+        width: max-content;
+        overflow-y: auto;
+        max-height: 80%;
+        font-size: 16px;
+    }
+    
+    #hold-settings-container {
+        display: flex;
+        flex-direction: column;
+        align-items: baseline;
+    }
+    
+    #hold-settings-container > .settings-item {
+        padding: 10px 20px;
+        justify-content: flex-start;
+        display: flex;
+        align-items: center;
+        min-height: 24px;
+    }
+    
+    #hold-settings-container > .settings-item > x-icon {
+        width: 20px;
+        margin-right: 10px;
+    }
+    
+    #hold-settings-container > x-button {
+        --overlay-color: rgb(var(--text-color-rgb), 0.1);
+        --ripple-color: rgb(var(--text-color-rgb), 0.3);
+        box-shadow: none;
+        color: var(--text-color);
+        width: -webkit-fill-available;
+        gap: 10px;
     }
     
     #led-config-container > #led-input-container {
@@ -419,15 +471,15 @@ ${() => WallImage == null && html()`
              onkeydown=${() => e => e.stopPropagation()}
              onmousedown=${() => () => {
                 let _dropdown = self.shadowRoot.querySelector("#hold-settings-dialog")
-                let _button = self.shadowRoot.querySelector("#hold-settings-button")
+                let _button = self.shadowRoot.querySelector("#configure-hold-button")
                 _dropdown.toggle(_button, true)
-            }}
-              onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#hold-settings-dialog").close())}>>
+             }}
+             onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#hold-settings-dialog").close())}>
             <x-icon icon="fa fa-cog"></x-icon>
         </div>
         <x-dialog id="hold-settings-dialog">
             <div id="hold-settings-container">
-                <x-button slot="dialog-item"
+                <x-button class="settings-item"
                           onclick=${async () => {
                             let holdGroup = await showPrompt(
                                 "Set the wall hold group for this hold",
@@ -451,6 +503,23 @@ ${() => WallImage == null && html()`
                         }}>
                     <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
                     Wall: ${() => state.selectedHold.group || "Default"}
+                </x-button>
+                <x-button class="settings-item">
+                    <x-icon icon="fa fa-circle" style="width: 20px;"></x-icon>
+                    Hold size:
+                    <x-button style="margin-left: auto;"
+                              onclick=${() => setHoldDiameter(state.selectedHold, (state.selectedHold.diameter || GlobalState.defaultHoldDiameter) - 1)}>
+                        <x-icon icon="fa fa-caret-left"></x-icon>
+                    </x-button>
+                    ${() => state.selectedHold.diameter || GlobalState.defaultHoldDiameter}
+                    <x-button onclick=${() => setHoldDiameter(state.selectedHold, (state.selectedHold.diameter || GlobalState.defaultHoldDiameter) + 1)}>
+                        <x-icon icon="fa fa-caret-right"></x-icon>
+                    </x-button>
+                </x-button>
+                <x-button class="settings-item"
+                          onclick=${() => deleteHold(state.selectedHold)}>
+                    <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
+                    Delete hold
                 </x-button>
             </div>
         </x-dialog>

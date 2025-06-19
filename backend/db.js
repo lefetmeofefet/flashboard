@@ -383,6 +383,7 @@ async function getHolds(wallId) {
     RETURN hold.id as id,
            hold.ledIds as ledIds,
            hold.group as group,
+           hold.diameter as diameter,
            hold.x as x,
            hold.y as y
     `, {wallId})
@@ -424,6 +425,13 @@ async function setHoldGroup(wallId, holdId, group) {
     MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold{id: $holdId})
     SET hold.group = $group
     `, {wallId, holdId, group})
+}
+
+async function setHoldDiameter(wallId, holdId, diameter) {
+    await queryNeo4j(`
+    MATCH (wall:Wall{id: $wallId}) -[:has]-> (hold:Hold{id: $holdId})
+    SET hold.diameter = $diameter
+    `, {wallId, holdId, diameter})
 }
 
 async function moveHold(wallId, holdId, x, y) {
@@ -559,6 +567,7 @@ export {
     createHold,
     setHoldLeds,
     setHoldGroup,
+    setHoldDiameter,
     moveHold,
     deleteHold,
     addHoldToRoute,

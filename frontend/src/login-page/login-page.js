@@ -314,7 +314,7 @@ ${() => state.nicknameMode ?
           onclick=${() => state.signupMode ? signUp() : login()}>
     ${() => state.signupMode ? "SIGN UP" : "LOGIN"}
 </x-button>
-${() => !window.isIOS && html()`
+${() => (!window.isIOS || true) && html()`
 <div id="or-sign-in-using">Or ${() => state.signupMode ? "sign up" : "sign in"} with</div>
 <x-button id="google-sign-in-button"
           onclick=${() => Flutter.isInFlutter() && Flutter.triggerGoogleSignIn()}>

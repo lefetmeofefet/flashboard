@@ -27,7 +27,7 @@ import {
     deleteWall,
     setHoldLeds,
     setWallAdmin,
-    getRouteSenders, setWallDefaultHoldDiameter, deleteAccount, setHoldGroup
+    getRouteSenders, setWallDefaultHoldDiameter, deleteAccount, setHoldGroup, setHoldDiameter
 } from "../db.js";
 import express from "express";
 
@@ -177,6 +177,12 @@ router.post('/setHoldLeds', async (req, res) => {
 router.post('/setHoldGroup', async (req, res) => {
     const {wallId, holdId, group} = req.body
     await setHoldGroup(wallId, holdId, group)
+    res.json({status: "success"})
+})
+
+router.post('/setHoldDiameter', async (req, res) => {
+    const {wallId, holdId, diameter} = req.body
+    await setHoldDiameter(wallId, holdId, diameter)
     res.json({status: "success"})
 })
 

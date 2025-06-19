@@ -380,12 +380,13 @@ async function clearLeds() {
     })
 }
 
-async function setHoldState(hold) {
+async function setHoldState(hold, route) {
     let ledGroups = createLedGroups([hold])
     await sendBTMessage({
         command: "setLeds",
         leds: ledGroups,
-        keepExistingLeds: true
+        keepExistingLeds: true,
+        routeId: route.id,
     })
 }
 

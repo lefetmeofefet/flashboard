@@ -132,15 +132,6 @@ async function loadRoutesAndHolds(includeWallInfo, wallId) {
     }
 }
 
-async function setDefaultHoldDiameter(holdDiameter) {
-    if (holdDiameter !== GlobalState.defaultHoldDiameter) {
-        GlobalState.selectedWall.defaultHoldDiameter = holdDiameter
-        GlobalState.defaultHoldDiameter = holdDiameter
-        GlobalState.holds.forEach(h => h.diameter = GlobalState.selectedWall.defaultHoldDiameter)
-        await Api.setWallDefaultHoldDiameter(holdDiameter)
-    }
-}
-
 async function chooseWall(wallId) {
     let urlParams = getUrlParams()
     try {
@@ -189,6 +180,10 @@ async function exitRoutePage() {
         }
         updateUrlParams({configuring: undefined})
     } else {
+        // If we exit an empty route, just delete it
+        if (GlobalState.selectedRoute.holds.length === 0) {
+            await Api.deleteRoute(GlobalState.selectedRoute.id)
+        }
         GlobalState.selectedRoute = null
         updateUrlParams({route: undefined})
         if (GlobalState.autoLeds) {
@@ -316,7 +311,6 @@ export {
     isAdmin,
     sortRoutes,
     isInRoutesPage,
-    setDefaultHoldDiameter,
     setFilteredRoutes,
     getFilteredRoutes
 }

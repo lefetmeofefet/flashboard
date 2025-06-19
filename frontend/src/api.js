@@ -207,6 +207,10 @@ async function setHoldGroup(holdId, group) {
     return await post("/api/setHoldGroup", {wallId: GlobalState.selectedWall.id, holdId, group})
 }
 
+async function setHoldDiameter(holdId, diameter) {
+    return await post("/api/setHoldDiameter", {wallId: GlobalState.selectedWall.id, holdId, diameter})
+}
+
 async function moveHold(holdId, x, y) {
     return await post("/api/moveHold", {wallId: GlobalState.selectedWall.id, holdId, x, y})
 }
@@ -259,6 +263,7 @@ const Api = {
     createHold,
     setHoldLeds,
     setHoldGroup,
+    setHoldDiameter,
     moveHold,
     deleteHold,
     addHoldToRoute,
