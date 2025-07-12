@@ -8,6 +8,13 @@ services:
       name: neo4j-data
       mountPath: /data
       sizeGB: 5
+    envVars:
+      - key: NEO4J_server_memory_heap_initial__size
+        value: 120m
+      - key: NEO4J_server_memory_heap_max__size
+        value: 220m
+      - key: NEO4J_server_memory_pagecache_size
+        value: 120m
 
   - name: flashboard
     type: web
