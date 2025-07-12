@@ -14,4 +14,4 @@ services:
     runtime: node
     plan: starter
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: npm run backend
