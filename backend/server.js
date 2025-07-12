@@ -4,6 +4,7 @@ import "express-async-errors"
 import cookieParser from "cookie-parser"
 import {AuthRouter, verifyToken} from "./routers/authRouter.js";
 import {ApiRouter} from "./routers/apiRouter.js";
+import {queryNeo4j} from "./db.js";
 
 const app = express()
 
@@ -40,3 +41,16 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection:', reason)
 })
+
+async function sendKeepAlive() {
+    try {
+        await queryNeo4j('RETURN 1 AS keepAlive');
+        console.log('Neo4j keep‑alive sent');
+    } catch (err) {
+        console.error('Neo4j keep‑alive failed:', err);
+    }
+}
+
+// Run once immediately
+sendKeepAlive();
+setInterval(sendKeepAlive, 1000 * 60 * 60);
