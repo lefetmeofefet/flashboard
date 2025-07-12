@@ -1,7 +1,7 @@
 services:
   - name: neo4j
     region: frankfurt
-    type: pserv
+    type: web
     runtime: docker
     plan: starter
     dockerfilePath: neo4j/Dockerfile
