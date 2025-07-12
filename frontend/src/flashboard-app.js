@@ -92,7 +92,7 @@ createYoffeeElement("flashboard-app", (props, self) => {
 ${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() ? html()`
 <div id="app-store-links">
     <img src="../res/images/GetItOnGooglePlay_button.png" onclick=${() => window.open("https://play.google.com/store/apps/details?id=flashboard.site.flashboard", "_blank")}/>
-    <img src="../res/images/AppStoreBadge.svg" onclick=${() => showAlert("iPhone app coming soon!", {html: "Meanwhile to use bluetooth on iPhones:<br>- Install the <a href='https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055' style='color: var(--secondary-color);'>Bluefy App</a> <br>- Open it and go to flashboard.site"})}/>
+    <img src="../res/images/AppStoreBadge.svg" onclick=${() => window.open("https://apps.apple.com/us/app/flashboard-climbing/id6747072379")}/>
     <x-button id="cancel-button" 
               onclick=${() => {
                   localStorage.setItem("no-app-store-links", "true")

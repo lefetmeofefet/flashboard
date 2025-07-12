@@ -381,13 +381,16 @@ async function clearLeds() {
 }
 
 async function setHoldState(hold, route) {
-    let ledGroups = createLedGroups([hold])
-    await sendBTMessage({
-        command: "setLeds",
-        leds: ledGroups,
-        keepExistingLeds: true,
-        routeId: route.id,
-    })
+    for (let ledId of hold.ledIds || []) {
+        await sendBTMessage({
+            command: "setLed",
+            snakeMode: false,
+            led: {
+                ...getLedRGB(hold.inRoute, hold.holdType),
+                i: ledId
+            }
+        })
+    }
 }
 
 async function setSnakeModeLed(r, g, b, i) {

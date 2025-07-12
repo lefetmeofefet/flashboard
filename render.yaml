@@ -1,0 +1,17 @@
+services:
+  - name: neo4j
+    type: pserv
+    runtime: docker
+    plan: starter
+    dockerfilePath: neo4j/Dockerfile
+    disk:
+      name: neo4j-data
+      mountPath: /data
+      sizeGB: 5
+
+  - name: flashboard
+    type: web
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
