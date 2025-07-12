@@ -1,5 +1,6 @@
 services:
   - name: neo4j
+    region: frankfurt
     type: pserv
     runtime: docker
     plan: starter
@@ -17,6 +18,7 @@ services:
         value: 120m
 
   - name: flashboard
+    region: frankfurt
     type: web
     runtime: node
     plan: starter
