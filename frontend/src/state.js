@@ -51,12 +51,15 @@ const GlobalState = {
 };
 
 let filteredRoutes = []
+
 function setFilteredRoutes(routes) {
     filteredRoutes = routes
 }
+
 function getFilteredRoutes() {
     return filteredRoutes
 }
+
 window.state = GlobalState
 
 function initFilters() {
@@ -260,7 +263,39 @@ function onBackClicked() {
     }
 }
 
+
+let shuffleSortSeed
+function seedShuffleSort() {
+    shuffleSortSeed = Math.floor(Math.random() * 2**32)
+}
+seedShuffleSort()
+
+function mulberry32random(seed) {
+    let t = seed
+    return function () {
+        t |= 0
+        t = t + 0x6D2B79F5 | 0
+        let r = Math.imul(t ^ t >>> 15, 1 | t)
+        r ^= r + Math.imul(r ^ r >>> 7, 61 | r)
+        return ((r ^ r >>> 14) >>> 0) / 4294967296
+    }
+}
+
 function sortRoutes() {
+    if (GlobalState.sorting === SORT_TYPES.SHUFFLE) {
+        console.log("Shuffling sort with seed: ", shuffleSortSeed)
+        let seededShuffleSortRandom = mulberry32random(shuffleSortSeed)
+        let sortedRoutes = GlobalState.routes
+            .sort((r1, r2) => r1.createdAt < r2.createdAt ? 1 : -1)
+        let shuffleSortedRoutes = []
+        while (sortedRoutes.length > 0) {
+            let index = Math.floor(seededShuffleSortRandom() * sortedRoutes.length)
+            let route = sortedRoutes.splice(index, 1)[0]
+            shuffleSortedRoutes.push(route)
+        }
+        GlobalState.routes = shuffleSortedRoutes
+        return
+    }
     GlobalState.routes = GlobalState.routes.sort((r1, r2) => {
         if (GlobalState.sorting === SORT_TYPES.NEWEST) {
             return r1.createdAt < r2.createdAt ? 1 : -1
@@ -310,6 +345,7 @@ export {
     onBackClicked,
     isAdmin,
     sortRoutes,
+    seedShuffleSort,
     isInRoutesPage,
     setFilteredRoutes,
     getFilteredRoutes

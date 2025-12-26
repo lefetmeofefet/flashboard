@@ -98,7 +98,7 @@ ${() => state.showAppLinks && window.isMobile && !Flutter.isInFlutter() ? html()
                   localStorage.setItem("no-app-store-links", "true")
                   state.showAppLinks = false
               }}>
-        <x-icon icon="fa fa-times"></x-icon>
+        <x-icon icon="close"></x-icon>
     </x-button>
 </div>
 ` : ""}
@@ -136,7 +136,7 @@ ${() => GlobalState.selectedWall != null && html()`
                      top: 10px;
                      background-color: #00000010;"
               onclick=${() => closePrivacyPolicy()}>
-        <x-icon icon="fa fa-times"></x-icon>
+        <x-icon icon="close"></x-icon>
     </x-button>
     <div style="overflow: auto;">
         ${() => GlobalState.showPrivacyPolicy && privacyPolicy()}

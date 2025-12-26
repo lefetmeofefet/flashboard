@@ -119,21 +119,21 @@ ${() => GlobalState.loading ? html()`
     ${() => !props.hidebackbutton && !props.showconfirmbutton && !props.showxbutton && html()`
     <x-button id="back-button"
               onclick=${() => (props.backclicked || onBackClicked)()}>
-        <x-icon icon="fa fa-arrow-left"></x-icon>
+        <x-icon icon="arrow_back"></x-icon>
     </x-button>
     `}
     
     ${() => props.showconfirmbutton && html()`
     <x-button id="confirm-button"
               onclick=${() => console.log("I do nothing")}>
-        <x-icon icon="fa fa-check"></x-icon>
+        <x-icon icon="check"></x-icon>
     </x-button>
     `}
     
     ${() => props.showxbutton && html()`
     <x-button id="x-button"
               onclick=${() => props.xbuttonclicked()}>
-        <x-icon icon="fa fa-times"></x-icon>
+        <x-icon icon="close"></x-icon>
     </x-button>
     `}
     
@@ -147,7 +147,7 @@ ${() => GlobalState.loading ? html()`
                   _dropdown.toggle(_button, true)
               }}
               onblur=${() => requestAnimationFrame(() => self.closeSettingsDialog())}>
-        <x-icon icon="fa fa-bars"></x-icon>
+        <x-icon icon="menu"></x-icon>
     </div>
     <x-dialog id="settings-dialog"
               onclose=${() => props.whenclosed && props.whenclosed()}>

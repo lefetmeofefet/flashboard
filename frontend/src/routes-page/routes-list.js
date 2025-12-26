@@ -62,6 +62,7 @@ createYoffeeElement("routes-list", (props, self) => {
     .route {
         display: flex;
         align-items: center;
+        justify-content: start;
         padding: 0 5px;
         border-radius: 0;
         color: unset;
@@ -121,15 +122,38 @@ createYoffeeElement("routes-list", (props, self) => {
         font-size: 12px;
     }
     
-    x-rating {
+    .route > .right-side {
+        display: flex;
+        flex-direction: column;
         margin-left: auto;
+        overflow: hidden;
+    }
+    
+    .route > .right-side > .right-top {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+    }
+    
+    .route > .right-side > .right-top > x-rating {
         --star-size: 12px;
         --star-padding: 0px;
         flex-wrap: wrap;
     }
     
-    .route > .grade {
+    .route > .right-side > .right-top > .grade {
         min-width: 21px;
+        margin-left: 5px;
+    }
+    
+    .route > .right-side > .route-styles {
+        margin-left: auto;
+        color: var(--text-color-weak-1);
+        font-size: 14px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: -webkit-fill-available;
     }
 </style>
 
@@ -150,19 +174,28 @@ ${() => {
     <div class="left-side">
         <div class="name">${() => route.name}</div>
         <div class="bottom-info">
+            by
             <div class="setter">${() => route.setters[0]?.nickname || "User deleted"},</div>
             <!--<div class="dot"></div>-->
             ${() => route.sends === 1 ? "1 send" : route.sends + " sends"}
-            ${() => route.sent && html()`<x-icon class="sent-icon" icon="fa fa-check"></x-icon>`}
-            ${() => route.liked && html()`<x-icon class="heart-icon" icon="fa fa-heart"></x-icon>`}
+            ${() => route.sent && html()`<x-icon class="sent-icon" icon="check"></x-icon>`}
+            ${() => route.liked && html()`<x-icon class="heart-icon" icon="favorite"></x-icon>`}
         </div>
     </div>
     
-    <x-rating rating=${() => route.starsAvg}
+    <div class="right-side">
+        <div class="right-top">
+            <x-rating rating=${() => route.starsAvg}
               raters=${() => route.numRatings}
               onlyactive></x-rating>
     
-    <div class="grade">V${() => route.grade}</div>
+            <div class="grade">V${() => route.grade}</div>
+        </div>
+        <div class="route-styles">
+            ${() => (route.routeStyles || []).join(", ").toLowerCase()}
+        </div>
+    </div>
+    
 </x-button>`)
 }}
 `
@@ -197,6 +230,10 @@ function filterRoutes() {
                 }
             } else if (filter.type === FILTER_TYPES.IN_LIST) {
                 if (!(route.lists || []).includes(filter.value)) {
+                    return false
+                }
+            } else if (filter.type === FILTER_TYPES.ROUTE_STYLE) {
+                if (!(route.routeStyles || []).includes(filter.value)) {
                     return false
                 }
             }

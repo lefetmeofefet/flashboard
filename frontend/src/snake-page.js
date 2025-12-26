@@ -160,11 +160,11 @@ createYoffeeElement("snake-page", (props, self) => {
 
 </style>
 
-<x-icon icon="fa fa-caret-up"
+<x-icon icon="keyboard_arrow_up"
         tabindex="0"
         onclick=${() => rightPressed()}
 ></x-icon>
-<x-icon icon="fa fa-caret-down"
+<x-icon icon="keyboard_arrow_down"
         tabindex="0"
         onclick=${() => leftPressed()}
 ></x-icon>

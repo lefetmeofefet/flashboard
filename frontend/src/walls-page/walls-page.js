@@ -146,19 +146,19 @@ createYoffeeElement("walls-page", () => {
           class="big-button"
           onclick=${async () => await connectToNearbyWall()}>
     Connect to nearby wall
-    <x-icon icon="fa fa-lightbulb"></x-icon>
+    <x-icon icon="lightbulb_2"></x-icon>
 </x-button>
 <x-button id="create-wall-button"
           class="big-button"
           onclick=${async () => await createLedlessWall()}>
     Create wall without LEDs
-    <x-icon icon="fa fa-plus"></x-icon>
+    <x-icon icon="add"></x-icon>
 </x-button>
 <x-button id="enter-code-button"
           class="big-button"
           onclick=${async () => await enterWithCode()}>
     Join by code
-    <x-icon icon="fa fa-key"></x-icon>
+    <x-icon icon="passkey"></x-icon>
 </x-button>
 `
 });

@@ -12,6 +12,7 @@ import {Api} from "../api.js"
 import {showAlert, showConfirm, showPrompt, showToast} from "../../utilz/popups.js";
 import {Bluetooth} from "../bluetooth.js";
 import {ROUTE_TYPES} from "/consts.js";
+import {ROUTE_STYLES} from "../routes-page/routes-filter.js";
 
 
 createYoffeeElement("single-route-page", (props, self) => {
@@ -20,6 +21,7 @@ createYoffeeElement("single-route-page", (props, self) => {
         editingTitle: false,
         highlightingRoute: GlobalState.autoLeds,
         editingLists: false,
+        editingRouteStyle: false,
     }
     window.onRouteChangedBt = routeId => {
         if (state.highlightingRoute && routeId !== props.route.id) {
@@ -29,6 +31,9 @@ createYoffeeElement("single-route-page", (props, self) => {
 
     let listsState = {}
     props.route?.lists?.forEach(list => listsState[list] = true)
+
+    let routeStylesState = {}
+    props.route?.routeStyles?.forEach(list => routeStylesState[list] = true)
 
     if (props.route?.isNew) {
         props.route.isNew = undefined
@@ -407,7 +412,7 @@ createYoffeeElement("single-route-page", (props, self) => {
 </style>
 
 <secondary-header showconfirmbutton=${() => state.editingTitle}
-                  whenclosed=${() => () => state.editingLists = false}>
+                  whenclosed=${() => () => {state.editingLists = false; state.editingRouteStyle = false}}>
     <text-input id="route-name-input"
                 class="header-input"
                 slot="title"
@@ -425,7 +430,15 @@ createYoffeeElement("single-route-page", (props, self) => {
                 }}
     ></text-input>
     
-    ${() => state.editingLists ? renderEditLists() : renderMenu()}
+    ${() => {
+        if (state.editingLists) {
+            return renderEditLists()
+        } else if (state.editingRouteStyle) {
+            return renderEditRouteStyle()
+        } else {
+            return renderMenu()
+        }
+    }}
     
     <div id="bottom-row"
          slot="bottom-row">
@@ -444,7 +457,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                       }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#setter-dialog").close())}>
                 ${() => setterName()}
-                <x-icon icon="fa fa-caret-down"></x-icon>
+                <x-icon icon="arrow_drop_down"></x-icon>
             </x-button>
         </div>
         <x-dialog id="setter-dialog"
@@ -478,7 +491,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#grade-dialog").close())}>
                 V${() => props.route?.grade}
-                <x-icon icon="fa fa-caret-down"></x-icon>
+                <x-icon icon="arrow_drop_down"></x-icon>
             </x-button>
         </div>
         <x-dialog id="grade-dialog"
@@ -512,7 +525,7 @@ createYoffeeElement("single-route-page", (props, self) => {
                         }}
                       onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#type-dialog").close())}>
                 ${() => props.route?.type}
-                <x-icon icon="fa fa-caret-down"></x-icon>
+                <x-icon icon="arrow_drop_down"></x-icon>
             </x-button>
         </div>
         <x-dialog id="type-dialog"
@@ -547,14 +560,14 @@ createYoffeeElement("single-route-page", (props, self) => {
     <x-button id="finish-button"
               active
               onclick=${() => state.editMode = false}>
-        <x-icon icon="fa fa-check"></x-icon>
+        <x-icon icon="check"></x-icon>
         Finish editing
     </x-button>
     ` : html()`
     <x-button id="heart-button"
               liked=${() => props.route?.liked} 
               onclick=${() => toggleLikeRoute(props.route)}>
-        <x-icon icon="fa fa-heart"></x-icon>
+        <x-icon icon="favorite"></x-icon>
     </x-button>
     
     <x-button id="star-button"
@@ -586,13 +599,13 @@ createYoffeeElement("single-route-page", (props, self) => {
     <x-button id="log-send-button"
               active=${() => props.route?.sent}
               onclick=${() => toggleSentRoute(props.route)}>
-        <x-icon icon="fa fa-check"></x-icon>
+        <x-icon icon="check"></x-icon>
     </x-button>
     
     <x-button id="edit-button"
               active=${() => state.editMode}
               onclick=${() => enterEditMode()}>
-        <x-icon icon="fa fa-edit"></x-icon>
+        <x-icon icon="edit"></x-icon>
     </x-button>
     
     `}
@@ -608,7 +621,7 @@ createYoffeeElement("single-route-page", (props, self) => {
             
                     state.highlightingRoute = !state.highlightingRoute
                 }}>
-        <x-icon icon="fa fa-lightbulb"></x-icon>
+        <x-icon icon="lightbulb_2"></x-icon>
     </x-button>
 </div>
 `
@@ -628,23 +641,28 @@ createYoffeeElement("single-route-page", (props, self) => {
                 showAlert("Who sent this route?", {html: senders.map(sender => sender.nickname).join("<br>")})
             }
         }}>
-            <x-icon icon="fa fa-check" style="width: 20px;"></x-icon>
+            <x-icon icon="check" style="width: 20px;"></x-icon>
             ${() => props.route?.sends} sends
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${() => state.editingLists = true}>
-            <x-icon icon="fa fa-plus" style="width: 20px;"></x-icon>
+            <x-icon icon="add" style="width: 20px;"></x-icon>
             Add to list
+        </x-button>
+        <x-button slot="dialog-item"
+                  onclick=${() => state.editingRouteStyle = true}>
+            <x-icon icon="style" style="width: 20px;"></x-icon>
+            Set route styles
         </x-button>
         ${() => allowedToChange && html()`
         <x-button slot="dialog-item"
                   onclick=${() => self.shadowRoot.querySelector("#route-name-input")?.focus()}>
-            <x-icon icon="fa fa-font" style="width: 20px;"></x-icon>
+            <x-icon icon="subheader" style="width: 20px;"></x-icon>
             Rename route
         </x-button>
         <x-button slot="dialog-item"
                   onclick=${() => enterEditMode()}>
-            <x-icon icon="fa fa-edit" style="width: 20px;"></x-icon>
+            <x-icon icon="edit" style="width: 20px;"></x-icon>
             Edit route
         </x-button>
         <x-button slot="dialog-item"
@@ -657,13 +675,13 @@ createYoffeeElement("single-route-page", (props, self) => {
                 await exitRoutePage()
             }
         }}>
-            <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
+            <x-icon icon="delete" style="width: 20px;"></x-icon>
             Delete route
         </x-button>
         `}
         <x-button slot="dialog-item"
                   onclick=${async () => console.log("date pressed hmm?")}>
-            <x-icon icon="fa fa-clock" style="width: 20px;"></x-icon>
+            <x-icon icon="schedule" style="width: 20px;"></x-icon>
             Created ${() => dayjs(props.route?.createdAt).format('DD-MM-YY HH:mm:ss')}
         </x-button>
     `}
@@ -698,7 +716,7 @@ createYoffeeElement("single-route-page", (props, self) => {
             if (list != null) {
                 listsState[list] = true
 
-                props.route.lists = [...(props.route.lists || []), list]
+                props.route.lists = [...(props.route?.lists || []), list]
                 GlobalState.lists = [...GlobalState.lists, list].sort((a, b) => a < b ? -1 : 1)
                 await Api.updateRoute(
                     props.route.id,
@@ -706,9 +724,31 @@ createYoffeeElement("single-route-page", (props, self) => {
                 )
             }
         }}>
-            <x-icon icon="fa fa-plus" style="width: 26px;"></x-icon>
+            <x-icon icon="add" style="width: 26px;"></x-icon>
             Create new list
         </x-button>
+        `
+    }
+
+    function renderEditRouteStyle() {
+        return html()`
+        ${() => [...Object.values(ROUTE_STYLES)].map(routeStyle => html(routeStylesState)`
+        <x-button slot="dialog-item" 
+                  onclick=${async e => {
+            e.stopPropagation()
+            routeStylesState[routeStyle] = !routeStylesState[routeStyle]
+            let currentRouteStyles = props.route?.routeStyles || []
+            let routeStyles = routeStylesState[routeStyle] ? [...currentRouteStyles, routeStyle] : currentRouteStyles.filter(l => l !== routeStyle)
+            props.route.routeStyles = routeStyles
+            await Api.updateRoute(
+                props.route.id,
+                {routeStyles}
+            )
+        }}>
+            <x-checkbox value=${() => routeStylesState[routeStyle]}></x-checkbox>
+            ${() => routeStyle}
+        </x-button>
+        `)}
         `
     }
 })

@@ -59,6 +59,9 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     }
 
     async function toggleHold(hold) {
+        if (showingUnusedHolds) {
+            await clearAllHolds()
+        }
         hold.inRoute = !hold.inRoute
         hold.holdType = ""
         if (state.highlightingLed) {
@@ -72,6 +75,9 @@ createYoffeeElement("edit-wall-page", (props, self) => {
     }
 
     async function unselectHold(hold) {
+        if (showingUnusedHolds) {
+            await clearAllHolds()
+        }
         hold.inRoute = false
         hold.holdType = ""
         if (state.highlightingLed) {
@@ -171,6 +177,57 @@ createYoffeeElement("edit-wall-page", (props, self) => {
             // GlobalState.holds.forEach(h => h.diameter = GlobalState.selectedWall.defaultHoldDiameter)
             await Api.setWallDefaultHoldDiameter(holdDiameter)
         }
+    }
+
+    let showingUnusedHolds = false
+    async function showUnusedHolds() {
+        if (showingUnusedHolds) {
+            await clearAllHolds()
+            return
+        }
+        // unselect selected hold
+        if (state.selectedHold != null) {
+            await unselectHold(state.selectedHold)
+            state.selectedHold = null
+        }
+
+        // find unused holds
+        let holdsInRoutes = new Set()
+        for (let route of GlobalState.routes) {
+            for (let hold of route.holds) {
+                holdsInRoutes.add(hold.id)
+            }
+        }
+        let unusedHolds = []
+        for (let hold of GlobalState.holds) {
+            if (!holdsInRoutes.has(hold.id)) {
+                unusedHolds.push(hold)
+            }
+        }
+        for (let hold of unusedHolds) {
+            hold.inRoute = true
+            hold.holdType = "finish"
+            if (state.highlightingLed) {
+                await Bluetooth.setHoldState(hold)
+            }
+        }
+
+        showingUnusedHolds = unusedHolds.length > 0
+        await showAlert(
+            "Unused Holds",
+            {text: unusedHolds.length === 0 ? "No unused holds, congratz!" : `Showing ${unusedHolds.length} unused holds`}
+        )
+    }
+
+    async function clearAllHolds() {
+        for (let hold of GlobalState.holds) {
+            hold.inRoute = false
+            hold.holdType = ""
+            if (state.highlightingLed) {
+                await Bluetooth.setHoldState(hold)
+            }
+        }
+        showingUnusedHolds = false
     }
 
     return html(GlobalState, state)`
@@ -425,7 +482,7 @@ ${() => WallImage == null && html()`
             <div id="led-input-container">
                 <x-button class="cycle-led-button"
                           onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), ledId - 1])}>
-                    <x-icon icon="fa fa-caret-left"></x-icon>
+                    <x-icon icon="arrow_back"></x-icon>
                 </x-button>
                 <text-input id="led-id-input"
                             type="number" 
@@ -448,7 +505,7 @@ ${() => WallImage == null && html()`
                 ></text-input>
                 <x-button class="cycle-led-button"
                           onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds.filter(id => id !== ledId), ledId + 1])}>
-                    <x-icon icon="fa fa-caret-right"></x-icon>
+                    <x-icon icon="arrow_right"></x-icon>
                 </x-button>
                 <x-button id="unlink-led-button"
                       onclick=${async () => {
@@ -456,14 +513,14 @@ ${() => WallImage == null && html()`
                                 await setHoldLedIds(state.selectedHold, state.selectedHold.ledIds.filter(id => id !== ledId))
                             }
                         }}>
-                <x-icon icon="fa fa-times"></x-icon>
+                <x-icon icon="close"></x-icon>
             </x-button>
             </div>
             `)}
             <x-button id="assign-led-button"
                       onclick=${() => setHoldLedIds(state.selectedHold, [...state.selectedHold.ledIds, getLatestLedId()])}>
                 ${() => state.selectedHold.ledIds.length === 0 ? "Assign LED" : "Add LED"}
-                <x-icon icon="fa fa-lightbulb"></x-icon>
+                <x-icon icon="lightbulb_2"></x-icon>
             </x-button>
         </div>
         <div id="configure-hold-button"
@@ -474,8 +531,8 @@ ${() => WallImage == null && html()`
                 let _button = self.shadowRoot.querySelector("#configure-hold-button")
                 _dropdown.toggle(_button, true)
              }}
-             onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#hold-settings-dialog").close())}>
-            <x-icon icon="fa fa-cog"></x-icon>
+             onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#hold-settings-dialog")?.close())}>
+            <x-icon icon="settings"></x-icon>
         </div>
         <x-dialog id="hold-settings-dialog">
             <div id="hold-settings-container">
@@ -501,24 +558,33 @@ ${() => WallImage == null && html()`
                                 state.selectedHold.group = holdGroup
                             }
                         }}>
-                    <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
+                    <x-icon icon="numbers" style="width: 20px;"></x-icon>
                     Wall: ${() => state.selectedHold.group || "Default"}
                 </x-button>
                 <x-button class="settings-item">
-                    <x-icon icon="fa fa-circle" style="width: 20px;"></x-icon>
+                    <x-icon icon="circle" style="width: 20px;"></x-icon>
                     Hold size:
-                    <x-button style="margin-left: auto;"
+                    <x-button style="margin-left: auto;padding: 0 5px;"
                               onclick=${() => setHoldDiameter(state.selectedHold, (state.selectedHold.diameter || GlobalState.defaultHoldDiameter) - 1)}>
-                        <x-icon icon="fa fa-caret-left"></x-icon>
+                        <x-icon icon="arrow_left"></x-icon>
                     </x-button>
                     ${() => state.selectedHold.diameter || GlobalState.defaultHoldDiameter}
-                    <x-button onclick=${() => setHoldDiameter(state.selectedHold, (state.selectedHold.diameter || GlobalState.defaultHoldDiameter) + 1)}>
-                        <x-icon icon="fa fa-caret-right"></x-icon>
+                    <x-button style="padding: 0 5px;"
+                              onclick=${() => setHoldDiameter(state.selectedHold, (state.selectedHold.diameter || GlobalState.defaultHoldDiameter) + 1)}>
+                        <x-icon icon="arrow_right"></x-icon>
                     </x-button>
                 </x-button>
                 <x-button class="settings-item"
+                          onclick=${() => {
+                              let routes = GlobalState.routes.filter(r => r.holds.some(hold => hold.id === state.selectedHold.id))
+                              showAlert("Routes with this hold", {html: routes.map(r => r.name).join("<br>") || "No routes"})
+                          }}>
+                    <x-icon icon="view_list" style="width: 20px;"></x-icon>
+                    Show routes with this hold
+                </x-button>
+                <x-button class="settings-item"
                           onclick=${() => deleteHold(state.selectedHold)}>
-                    <x-icon icon="fa fa-trash" style="width: 20px;"></x-icon>
+                    <x-icon icon="delete" style="width: 20px;"></x-icon>
                     Delete hold
                 </x-button>
             </div>
@@ -548,12 +614,12 @@ ${() => WallImage == null && html()`
                         }
                     }
                 }}>
-        <x-icon icon="fa fa-edit" style="width: 20px;"></x-icon>
+        <x-icon icon="edit" style="width: 20px;"></x-icon>
         Rename wall
     </x-button>
     <x-button slot="dialog-item"
               onclick=${() => uploadImage()}>
-        <x-icon icon="fa fa-cloud-upload-alt" style="width: 20px;"></x-icon>
+        <x-icon icon="image_arrow_up" style="width: 20px;"></x-icon>
         Change wall image
     </x-button>
     <x-button slot="dialog-item"
@@ -575,22 +641,23 @@ ${() => WallImage == null && html()`
                         GlobalState.selectedWall = {...GlobalState.selectedWall}
                     }
                 }}>
-        <x-icon icon="fa fa-lightbulb" style="width: 20px;"></x-icon>
+        <x-icon icon="lightbulb" style="width: 20px;"></x-icon>
         Brightness:
         <div style="margin-left: auto">
             ${() => Math.round((GlobalState.selectedWall?.brightness / 255) * 100)}%
         </div>
     </x-button>
     <div slot="dialog-item">
-        <x-icon icon="fa fa-circle" style="width: 20px;"></x-icon>
-        Hold size:
-        <x-button style="margin-left: auto;"
+        <x-icon icon="circle" style="width: 20px;"></x-icon>
+        Default hold size:
+        <x-button style="margin-left: auto; padding: 0 5px;"
                   onclick=${() => setDefaultHoldDiameter(GlobalState.defaultHoldDiameter - 1)}>
-            <x-icon icon="fa fa-caret-left"></x-icon>
+            <x-icon icon="arrow_left"></x-icon>
         </x-button>
         ${() => GlobalState.defaultHoldDiameter}
-        <x-button onclick=${() => setDefaultHoldDiameter(GlobalState.defaultHoldDiameter + 1)}>
-            <x-icon icon="fa fa-caret-right"></x-icon>
+        <x-button style="padding: 0 5px;"
+                  onclick=${() => setDefaultHoldDiameter(GlobalState.defaultHoldDiameter + 1)}>
+            <x-icon icon="arrow_right"></x-icon>
         </x-button>
     </div>
     
@@ -617,14 +684,19 @@ ${() => WallImage == null && html()`
                       state.selectedHold.group = holdGroup
                   }
             }}>
-        <x-icon icon="fa fa-hashtag" style="width: 20px;"></x-icon>
+        <x-icon icon="numbers" style="width: 20px;"></x-icon>
         Wall: ${() => state.selectedHold.group || "Default"}
     </x-button>
     `}
     
     <x-button slot="dialog-item"
+              onclick=${() => showUnusedHolds()}>
+        <x-icon icon="radio_button_unchecked" style="width: 20px;"></x-icon>
+        Show unused holds
+    </x-button>
+    <x-button slot="dialog-item"
               onclick=${() => showAlert("Coming soon!")}>
-        <x-icon icon="fa fa-paint-brush" style="width: 20px;"></x-icon>
+        <x-icon icon="brush" style="width: 20px;"></x-icon>
         Edit colors
     </x-button>
 </secondary-header>
@@ -642,7 +714,7 @@ ${() => WallImage != null && html()`
 
 ${() => WallImage == null && html()`
 <x-button id="upload-image-button" onclick=${() => uploadImage()}>
-    <x-icon icon="fa fa-cloud-upload-alt"></x-icon>
+    <x-icon icon="image_arrow_up"></x-icon>
     <div id="upload-description">
         <div id="upload-text">Upload your wall image</div>
         <div id="upload-tip">Tip: use CamScanner original setting for a clean image</div>
@@ -654,7 +726,7 @@ ${() => WallImage == null && html()`
     <x-button id="delete-button"
               data-hidden=${() => state.selectedHold == null}
               onclick=${() => deleteHold(state.selectedHold)}>
-        <x-icon icon="fa fa-trash"></x-icon>
+        <x-icon icon="delete"></x-icon>
     </x-button>
     <x-button id="plus-button"
               cancel-mode=${() => state.editingHoldsMode}
@@ -671,17 +743,17 @@ ${() => WallImage == null && html()`
               }}>
         ${() => state.editingHoldsMode ? html()`
         Finish
-        <x-icon icon="fa fa-times"></x-icon>
+        <x-icon icon="close"></x-icon>
         ` : html()`
         Add or move holds
-        <x-icon icon="fa fa-plus"></x-icon>
+        <x-icon icon="add"></x-icon>
         `}
     </x-button>
     
     <x-button id="turn-on-leds-button"
               active=${() => state.highlightingLed}
               onclick=${() => toggleHighlightingLed()}>
-        <x-icon icon="fa fa-lightbulb"></x-icon>
+        <x-icon icon="lightbulb_2"></x-icon>
     </x-button>
 </div>
 `

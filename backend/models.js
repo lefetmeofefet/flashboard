@@ -25,7 +25,7 @@ class Wall {
 }
 
 class Route {
-    constructor(id, name, grade, setters, holds, sent, liked, sends, createdAt, lists) {
+    constructor(id, name, grade, setters, holds, sent, liked, sends, createdAt, lists, routeStyles) {
         this.id = id
         this.name = name
         this.grade = grade
@@ -42,6 +42,7 @@ class Route {
         this.sends = sends
         this.createdAt = createdAt
         this.lists = lists
+        this.routeStyles = routeStyles
     }
 
     fromDb(dbObject) {

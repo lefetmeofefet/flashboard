@@ -380,8 +380,8 @@ createYoffeeElement("wall-element", (props, self) => {
                 }
                 self.showZoomControlButton()
     }}>
-    <x-icon icon=${() => state.imageMode === IMAGE_MODES.CONTAIN ? "fa fa-expand" : 
-        (state.imageMode === IMAGE_MODES.COVER ? "fa fa-arrows-alt" : "fa fa-compress")}></x-icon>
+    <x-icon icon=${() => state.imageMode === IMAGE_MODES.CONTAIN ? "arrows_outward" : 
+        (state.imageMode === IMAGE_MODES.COVER ? "open_in_full" : "expand")}></x-icon>
 </x-button>
 
 `})

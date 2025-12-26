@@ -1,6 +1,6 @@
 import {html, createYoffeeElement} from "../../libs/yoffee/yoffee.min.js"
 import {
-    GlobalState, sortRoutes,
+    GlobalState, seedShuffleSort, sortRoutes,
 } from "../state.js";
 import "../components/text-input.js"
 import "../components/x-loader.js"
@@ -23,6 +23,7 @@ const SORT_TYPES = {
     OLDEST: "Oldest",
     HARDEST: "Hardest",
     EASIEST: "Easiest",
+    SHUFFLE: "Shuffle",
 }
 
 const FILTER_TYPES = {
@@ -32,9 +33,22 @@ const FILTER_TYPES = {
     NOT_SENT_BY_ME: "Not sent by me",
     SETTER: "Setter",
     RATING: "Rating",
+    ROUTE_STYLE: "Route style",
     IN_LIST: "In list",
 }
 
+const ROUTE_STYLES = {
+    DYNO: "Dyno",
+    CRIMPS: "Crimps",
+    POCKETS: "Pockets",
+    SHOULDERY: "Shouldery",
+    UNDERCLINGS: "Underclings",
+    PINCHES: "Pinches",
+    SLOPERS: "Slopers",
+    HEEL_HOOKS: "Heel hooks",
+    TOE_HOOKS: "Toe hooks",
+
+}
 
 createYoffeeElement("routes-filter", (props, self) => {
     let state = {
@@ -65,6 +79,12 @@ createYoffeeElement("routes-filter", (props, self) => {
             let setterTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.SETTER)}"]`)
             setterTag.dispatchEvent(new Event('mousedown'))
             setterTag.focus()
+        } else if (filterType === FILTER_TYPES.ROUTE_STYLE) {
+            setFilter(FILTER_TYPES.ROUTE_STYLE, "style")
+            state.editedFilterType = filterType
+            let listTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.ROUTE_STYLE)}"]`)
+            listTag.dispatchEvent(new Event('mousedown'))
+            listTag.focus()
         } else if (filterType === FILTER_TYPES.IN_LIST) {
             setFilter(FILTER_TYPES.IN_LIST, "list")
             state.editedFilterType = filterType
@@ -106,6 +126,17 @@ createYoffeeElement("routes-filter", (props, self) => {
                 // If we're clicking a different filter, we shouldn't close the dialog
                 _dropdown.close()
                 requestAnimationFrame(() => _dropdown.open(setterTag, true))
+            }
+            state.editedFilterType = filter.type
+        } else if (filter.type === FILTER_TYPES.ROUTE_STYLE) {
+            let _dropdown = self.shadowRoot.querySelector("#edit-filter-dialog")
+            let routeStyleTag = self.shadowRoot.querySelector(`.tag[data-filter-type="${filterTypeToHtml(FILTER_TYPES.ROUTE_STYLE)}"]`)
+            if (state.editedFilterType === filter.type) {
+                _dropdown.toggle(routeStyleTag, true)
+            } else {
+                // If we're clicking a different filter, we shouldn't close the dialog
+                _dropdown.close()
+                requestAnimationFrame(() => _dropdown.open(routeStyleTag, true))
             }
             state.editedFilterType = filter.type
         } else if (filter.type === FILTER_TYPES.IN_LIST) {
@@ -174,7 +205,7 @@ createYoffeeElement("routes-filter", (props, self) => {
     }
     
     .tag > .delete-icon {
-        padding: 3px;
+        padding: 0 3px;
         color: var(--text-color-weak-1);
     }
     
@@ -208,10 +239,6 @@ createYoffeeElement("routes-filter", (props, self) => {
         padding: 10px 20px;
         --star-size: 20px;
         --star-padding: 5px;
-    }
-    
-    #sorting-tag > x-icon {
-        transform: rotate(90deg) scaleX(0.8);;
     }
     
     #add-filter-tag {
@@ -250,7 +277,7 @@ createYoffeeElement("routes-filter", (props, self) => {
         _dropdown.toggle(_button, true)
     }}
     onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#sorting-dialog").close())}>
-    <x-icon icon="fa fa-exchange-alt"></x-icon>
+    <x-icon icon="sort"></x-icon>
     ${() => GlobalState.sorting}
 </x-button>
 <x-dialog id="sorting-dialog"
@@ -261,6 +288,9 @@ createYoffeeElement("routes-filter", (props, self) => {
          onclick=${() => {
              self.shadowRoot.querySelector("#sorting-dialog").close()
              GlobalState.sorting = sortType
+             if (sortType === SORT_TYPES.SHUFFLE) {
+                 seedShuffleSort()
+             }
              sortRoutes()
          }}>
         ${sortType}
@@ -287,7 +317,7 @@ ${() => GlobalState.filters.map(filter => html(filter)`
         } else if (filter.type === FILTER_TYPES.SETTER) {
             return html()`
             <div style="display: flex; align-items: center; gap: 5px;">
-                <x-icon icon="fa fa-user" style="color: var(--text-color-weak);"></x-icon>
+                <x-icon icon="person" style="color: var(--text-color-weak);"></x-icon>
                 ${filter.value.id === GlobalState.user.id ? "Me" : filter.value.nickname}
             </div>
             `
@@ -304,28 +334,35 @@ ${() => GlobalState.filters.map(filter => html(filter)`
         } else if (filter.type === FILTER_TYPES.LIKED_ROUTES) {
             return html()`
             <div style="display: flex; align-items: center; gap: 5px;">
-                <x-icon icon="fa fa-heart" style="color: var(--love-color);"></x-icon>
+                <x-icon icon="favorite" style="color: var(--love-color);"></x-icon>
                 Liked
             </div>
             `
         } else if (filter.type === FILTER_TYPES.SENT_BY_ME) {
             return html()`
             <div style="display: flex; align-items: center; gap: 5px;">
-                <x-icon icon="fa fa-check" style="color: var(--great-success-color);"></x-icon>
+                <x-icon icon="check" style="color: var(--great-success-color);"></x-icon>
                 Sent
             </div>
             `
         } else if (filter.type === FILTER_TYPES.NOT_SENT_BY_ME) {
             return html()`
             <div style="display: flex; align-items: center; gap: 5px;">
-                <x-icon icon="fa fa-times" style="color: var(--danger-zone-color);"></x-icon>
+                <x-icon icon="close" style="color: var(--danger-zone-color);"></x-icon>
                 Not sent
+            </div>
+            `
+        } else if (filter.type === FILTER_TYPES.ROUTE_STYLE) {
+            return html()`
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <x-icon icon="style" style="color: var(--text-color-weak);"></x-icon>
+                ${filter.value}
             </div>
             `
         } else if (filter.type === FILTER_TYPES.IN_LIST) {
             return html()`
             <div style="display: flex; align-items: center; gap: 5px;">
-                <x-icon icon="fa fa-list-ul" style="color: var(--text-color-weak);"></x-icon>
+                <x-icon icon="list" style="color: var(--text-color-weak);"></x-icon>
                 ${filter.value}
             </div>
             `
@@ -333,7 +370,7 @@ ${() => GlobalState.filters.map(filter => html(filter)`
     }}
     </div>
     <x-icon class="delete-icon" 
-            icon="fa fa-times"
+            icon="close"
             onmousedown=${e => {
                 GlobalState.filters = GlobalState.filters.filter(f => f.type !== filter.type)
                 e.stopPropagation()
@@ -386,6 +423,24 @@ ${() => GlobalState.filters.map(filter => html(filter)`
                 `)}
             </div>
             `
+        } else if (state.editedFilterType === FILTER_TYPES.ROUTE_STYLE) {
+            if (existingFilter == null) {
+                return
+            }
+            return html()`
+            <div class="dropdown-list-dialog">
+                ${() => [...Object.values(ROUTE_STYLES)].map(style => html()`
+                <div class="item"
+                     data-selected=${() => style === GlobalState.filters.find(filter => filter.type === FILTER_TYPES.ROUTE_STYLE)?.value}
+                     onclick=${() => {
+                         setFilter(FILTER_TYPES.ROUTE_STYLE, style)
+                         requestAnimationFrame(() => self.shadowRoot.querySelector("#edit-filter-dialog").close())
+                     }}>
+                    ${() => style}
+                </div>
+                `)}
+            </div>
+            `
         } else if (state.editedFilterType === FILTER_TYPES.IN_LIST) {
             if (existingFilter == null) {
                 return
@@ -431,7 +486,7 @@ ${() => GlobalState.filters.map(filter => html(filter)`
           }}
           onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#add-filter-dialog").close())}>
     Add filter
-    <x-icon icon="fa fa-plus"></x-icon>
+    <x-icon icon="add"></x-icon>
 </x-button>
 <x-dialog id="add-filter-dialog" 
           class="dropdown-list-dialog">
@@ -444,17 +499,19 @@ ${() => GlobalState.filters.map(filter => html(filter)`
             if (filterType === FILTER_TYPES.GRADE) {
                 return html()`<div class="item-icon" style="color: var(--secondary-color); font-weight: bold; scaleX(1.5) scaleY(1.2);">V</div>`
             } else if (filterType === FILTER_TYPES.SETTER) {
-                return html()`<x-icon class="item-icon" icon="fa fa-user"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="person"></x-icon>`
             } else if (filterType === FILTER_TYPES.LIKED_ROUTES) {
-                return html()`<x-icon class="item-icon" icon="fa fa-heart" style="color: var(--love-color);"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="favorite" style="color: var(--love-color);"></x-icon>`
             } else if (filterType === FILTER_TYPES.RATING) {
-                return html()`<x-icon class="item-icon" icon="fa fa-star" style="color: #BFA100;"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="star" style="color: #BFA100;"></x-icon>`
             } else if (filterType === FILTER_TYPES.SENT_BY_ME) {
-                return html()`<x-icon class="item-icon" icon="fa fa-check" style="color: var(--great-success-color);"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="check" style="color: var(--great-success-color);"></x-icon>`
             } else if (filterType === FILTER_TYPES.NOT_SENT_BY_ME) {
-                return html()`<x-icon class="item-icon" icon="fa fa-times" style="color: var(--danger-zone-color);"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="close" style="color: var(--danger-zone-color);"></x-icon>`
+            } else if (filterType === FILTER_TYPES.ROUTE_STYLE) {
+                return html()`<x-icon class="item-icon" icon="style"></x-icon>`
             } else if (filterType === FILTER_TYPES.IN_LIST) {
-                return html()`<x-icon class="item-icon" icon="fa fa-list-ul"></x-icon>`
+                return html()`<x-icon class="item-icon" icon="list"></x-icon>`
             }
         }}
         ${filterType}
@@ -464,4 +521,4 @@ ${() => GlobalState.filters.map(filter => html(filter)`
 `
 })
 
-export {SORT_TYPES, FILTER_TYPES}
+export {SORT_TYPES, FILTER_TYPES, ROUTE_STYLES}

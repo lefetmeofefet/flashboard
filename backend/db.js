@@ -223,6 +223,7 @@ async function getRoutes(wallId, whereClause, parameters) {
            route.numRatings as numRatings,
            route.type as type,
            route.lists as lists,
+           route.routeStyles as routeStyles,
            sends as sends,
            [setter IN setters | {id: setter.id, nickname: setter.nickname}] AS setters,
            [i IN range(0, size(holds) - 1) | {
@@ -253,6 +254,7 @@ async function createRoute(wallId, setterId) {
         numRatings: 0,
         grade: 3,
         lists: [],
+        routeStyles: [],
         type: "${ROUTE_TYPES.ALL_HOLDS}"
     })
     CREATE (wall) -[:has]-> (route)
@@ -265,6 +267,7 @@ async function createRoute(wallId, setterId) {
            route.numRatings as numRatings,
            route.type as type,
            route.lists as lists,
+           route.routeStyles as routeStyles,
            0 as sends,
            [{id: setter.id, nickname: setter.nickname}] as setters,
            [] as holds
@@ -272,7 +275,7 @@ async function createRoute(wallId, setterId) {
 }
 
 async function updateRoute(wallId, routeId, routeFields) {
-    if (routeFields.name != null || routeFields.grade != null || routeFields.type != null || routeFields.lists != null) {
+    if (routeFields.name != null || routeFields.grade != null || routeFields.type != null || routeFields.lists != null || routeFields.routeStyles != null) {
         let updateStatements = []
         if (routeFields.name != null) {
             updateStatements.push("route.name = $name")
@@ -286,6 +289,9 @@ async function updateRoute(wallId, routeId, routeFields) {
         if (routeFields.lists != null) {
             updateStatements.push(`route.lists = [${routeFields.lists.map((_, index) => "$list_item_" + index).join(", ")}]`)
         }
+        if (routeFields.routeStyles != null) {
+            updateStatements.push(`route.routeStyles = [${routeFields.routeStyles.map((_, index) => "$route_style_item_" + index).join(", ")}]`)
+        }
         if (updateStatements.length > 0) {
             let params = {
                 wallId,
@@ -296,6 +302,9 @@ async function updateRoute(wallId, routeId, routeFields) {
             }
             for (let i = 0; i < (routeFields.lists || []).length; i += 1) {
                 params["list_item_" + i] = routeFields.lists[i]
+            }
+            for (let i = 0; i < (routeFields.routeStyles || []).length; i += 1) {
+                params["route_style_item_" + i] = routeFields.routeStyles[i]
             }
             await queryNeo4j(`
             MATCH (wall:Wall{id: $wallId}) -[:has]-> (route:Route{id: $routeId})

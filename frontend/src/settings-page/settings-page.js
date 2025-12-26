@@ -91,7 +91,7 @@ createYoffeeElement("settings-page", (props, self) => {
                     showToast("Wall link copied to clipboard!")
                     self.shadowRoot.querySelector("secondary-header").closeSettingsDialog()
                 }}>
-        <x-icon icon="fa fa-share-alt" style="width: 20px"></x-icon>
+        <x-icon icon="share" style="width: 20px"></x-icon>
         Copy Invite link
     </x-button>
 </secondary-header>

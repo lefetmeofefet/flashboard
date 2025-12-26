@@ -15,7 +15,6 @@ import {loadFile} from "../utilz/load-file.js";
 import {Bluetooth} from "./bluetooth.js";
 import {enterFullscreen, exitFullscreen, isFullScreen} from "../utilz/fullscreen.js";
 import {debounce} from "../utilz/debounce.js";
-import {renderBtIcon} from "./footer.js";
 
 
 let uploadImage = async () => {
@@ -259,7 +258,7 @@ ${() => {
                     updateSearch(null)
                 }
             }}>
-    <x-icon icon="fa fa-arrow-left"
+    <x-icon icon="arrow_back"
             slot="before"
             onclick=${() => {
                 state.searchMode = false
@@ -267,7 +266,7 @@ ${() => {
             }}
     ></x-icon>
     ${() => GlobalState.freeTextFilter != null && html()`
-    <x-icon icon="fa fa-times"
+    <x-icon icon="close"
             slot="after"
             onclick=${() => {
                 let search = self.shadowRoot.querySelector("#search")
@@ -285,14 +284,14 @@ ${() => {
 ${() => GlobalState.selectedWall != null && html()`
 <x-button id="refresh-button"
           onclick=${async () => await loadRoutesAndHolds()}>
-    <x-icon icon="fa fa-sync ${() => GlobalState.loading ? "fa-spin" : ""}"></x-icon>
+    <x-icon icon="refresh" spin=${() => GlobalState.loading}></x-icon>
 </x-button>
 <x-button id="search-button"
           onclick=${() => {
               state.searchMode = true
               self.shadowRoot.querySelector("#search")?.focus()
           }}>
-    <x-icon icon="fa fa-search"></x-icon>
+    <x-icon icon="search"></x-icon>
 </x-button>
 `}
 `
@@ -311,8 +310,7 @@ ${() => GlobalState.selectedWall != null && html()`
          _dropdown.toggle(_button, true)
      }}
      onblur=${() => requestAnimationFrame(() => self.shadowRoot.querySelector("#settings-dialog").close())}>
-    <x-icon icon="fa fa-bars"></x-icon>
-<!--    <x-icon icon="fa fa-ellipsis-v"></x-icon>-->
+    <x-icon icon="menu"></x-icon>
 </div>
 
 <x-dialog id="settings-dialog">
@@ -331,7 +329,7 @@ ${() => GlobalState.selectedWall != null && html()`
             }}>
             Hi, ${() => GlobalState.user.nickname}!
             <x-button id="edit-nickname-button">
-                <x-icon icon="fa fa-edit"></x-icon>
+                <x-icon icon="edit"></x-icon>
             </x-button>
         </div>
         
@@ -341,7 +339,7 @@ ${() => GlobalState.selectedWall != null && html()`
         ${() => !GlobalState.bluetoothConnected && html()`
         <x-button class="settings-item"
                   onclick=${() => Bluetooth.connectToWall()}>
-            ${() => renderBtIcon()}
+            <x-icon icon="bluetooth"></x-icon>
             Connect to wall
         </x-button>
         `}
@@ -351,20 +349,20 @@ ${() => GlobalState.selectedWall != null && html()`
                       showToast("Wall link copied to clipboard!")
                       self.shadowRoot.querySelector("#settings-dialog").close()
                   }}>
-            <x-icon icon="fa fa-share-alt"></x-icon>
+            <x-icon icon="share"></x-icon>
             Copy Invite link
         </x-button>
         
         ${() => isAdmin() && html()`
         <x-button class="settings-item"
                   onclick=${() => enterConfigureHoldsPage()}>
-            <x-icon icon="fa fa-hand-rock"></x-icon>
+            <x-icon icon="settings"></x-icon>
             Configure Wall
         </x-button>
         
         <x-button class="settings-item"
                   onclick=${() => GlobalState.inSettingsPage = true}>
-            <x-icon icon="fa fa-user"></x-icon>
+            <x-icon icon="passkey"></x-icon>
             Manage user permissions
         </x-button>
         `}
@@ -372,7 +370,7 @@ ${() => GlobalState.selectedWall != null && html()`
         <x-button class="settings-item"
                   id="auto-leds"
                   onclick=${() => setAutoLeds(!GlobalState.autoLeds)}>
-            <x-icon icon="fa fa-bolt"></x-icon>
+            <x-icon icon="bolt"></x-icon>
             <div>Auto leds</div>
             <x-switch value=${() => GlobalState.autoLeds}
                       style="--circle-size: 20px; margin-left: auto; padding-left: 10px;">
@@ -381,7 +379,7 @@ ${() => GlobalState.selectedWall != null && html()`
         <x-button class="settings-item"
                   id="snakeio"
                   onclick=${() => snakeMeUp()}>
-            <x-icon icon="fa fa-question"></x-icon>
+            <x-icon icon="question_mark"></x-icon>
             Snake me up
         </x-button>
         `}
@@ -389,7 +387,7 @@ ${() => GlobalState.selectedWall != null && html()`
         <x-button class="settings-item"
                   id="theme-toggle"
                   onclick=${() => updateTheme(!GlobalState.darkTheme)}>
-            <x-icon icon=${() => GlobalState.darkTheme ? "fa fa-moon" : "fa fa-sun"}></x-icon>
+            <x-icon icon=${() => GlobalState.darkTheme ? "dark_mode" : "light_mode"}></x-icon>
             <div>Theme:</div>
             <x-switch value=${() => GlobalState.darkTheme}
                       style="--circle-size: 20px; margin-left: auto; padding-left: 10px;">
@@ -402,7 +400,7 @@ ${() => GlobalState.selectedWall != null && html()`
                       isFullScreen() ? exitFullscreen() : enterFullscreen();
                       self.shadowRoot.querySelector("#settings-dialog").close()
                   }}>
-            <x-icon icon="fa fa-expand"></x-icon>
+            <x-icon icon="fullscreen"></x-icon>
             Toggle fullscreen
         </x-button>
         
@@ -410,13 +408,13 @@ ${() => GlobalState.selectedWall != null && html()`
         <x-button class="settings-item"
                   id="exit-wall"
                   onclick=${() => signOut()}>
-            <x-icon icon="fa fa-sign-out-alt" style="transform: rotate(180deg)"></x-icon>
+            <x-icon icon="logout" style="transform: rotate(180deg)"></x-icon>
             Sign out
         </x-button>
         <x-button class="settings-item"
                   id="privacy-policy"
                   onclick=${() => showPrivacyPolicy()}>
-            <x-icon icon="fa fa-document"></x-icon>
+            <x-icon icon="policy"></x-icon>
             Privacy Policy
         </x-button>
         `}
@@ -430,7 +428,7 @@ ${() => GlobalState.selectedWall != null && html()`
                       await exitWall()
                       showToast("Successfully unlinked wall from LED system!")
                   }}>
-            <x-icon icon="fa fa-chain-broken"></x-icon>
+            <x-icon icon="sync_disabled"></x-icon>
             Unlink wall from LED sytem
         </x-button>
         `}
@@ -455,14 +453,14 @@ ${() => GlobalState.selectedWall != null && html()`
                           showToast("Wall name to delete wasn't entered correctly", {error: true})
                       }
                   }}>
-            <x-icon icon="fa fa-trash"></x-icon>
+            <x-icon icon="delete"></x-icon>
             Delete wall
         </x-button>
         `}
         <x-button class="settings-item"
                   id="delete-wall"
                   onclick=${() => window.open("https://discord.gg/x5gbeD6hcA", "_blank")}>
-            <x-icon icon="fab fa-discord"></x-icon>
+            <x-icon icon="chat"></x-icon>
             Contact Us
         </x-button>
         
@@ -481,7 +479,7 @@ ${() => GlobalState.selectedWall != null && html()`
                             window.location.reload()
                         }
                     }}>
-            <x-icon icon="fa fa-times""></x-icon>
+            <x-icon icon="close""></x-icon>
             Delete Account
         </x-button>
         `}

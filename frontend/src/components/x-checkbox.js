@@ -50,7 +50,7 @@ customElements.define("x-checkbox", class extends YoffeeElement {
                     
                 </style>
                 <x-button is-on="${() => this.props.value}">
-                    <x-icon id="check" icon="fas fa-check"></x-icon>
+                    <x-icon id="check" icon="check"></x-icon>
                 </x-button>
         `
     }

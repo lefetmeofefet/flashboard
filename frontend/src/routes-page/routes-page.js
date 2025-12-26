@@ -80,17 +80,6 @@ createYoffeeElement("routes-page", (props, self) => {
         color: var(--text-color);
     }
     
-    #bottom-buttons > #clear-leds-button > #slash-div {
-        position: absolute;
-        margin-left: 1px;
-        margin-bottom: 0px;
-        background-color: var(--text-color);
-        width: 26px;
-        height: 2px;
-        transform: rotate(45deg);
-        border-bottom: 2px solid var(--background-color);
-    }
-
 </style>
 
 <header-bar></header-bar>
@@ -112,8 +101,7 @@ ${() => GlobalState.holds.length === 0 && html()`
               onclick=${async () => {
                     await Bluetooth.clearLeds()
                 }}>
-        <x-icon icon="fa fa-lightbulb"></x-icon>
-        <div id="slash-div"></div>
+        <x-icon icon="light_off"></x-icon>
     </x-button>
     
     <x-button id="new-route-button"
@@ -126,7 +114,7 @@ ${() => GlobalState.holds.length === 0 && html()`
                     await enterRoutePage(route)
                 }}>
         ${() => GlobalState.routes.length === 0 && "Create Route"}
-        <x-icon icon="fa fa-plus"></x-icon>
+        <x-icon icon="add"></x-icon>
     </x-button>
 </div>
 `
