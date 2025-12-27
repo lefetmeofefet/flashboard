@@ -27,7 +27,7 @@ import {
     deleteWall,
     setHoldLeds,
     setWallAdmin,
-    getRouteSenders, setWallDefaultHoldDiameter, deleteAccount, setHoldGroup, setHoldDiameter
+    getRouteSenders, setWallDefaultHoldDiameter, deleteAccount, setHoldGroup, setHoldDiameter, setWallGradingSystem
 } from "../db.js";
 import express from "express";
 
@@ -114,6 +114,12 @@ router.post('/setWallName', async (req, res) => {
 router.post('/setWallBrightness', async (req, res) => {
     const {wallId, brightness} = req.body
     await setWallBrightness(wallId, brightness)
+    res.json({status: 'success'})
+})
+
+router.post('/setWallGradingSystem', async (req, res) => {
+    const {wallId, gradingSystem} = req.body
+    await setWallGradingSystem(wallId, gradingSystem)
     res.json({status: 'success'})
 })
 

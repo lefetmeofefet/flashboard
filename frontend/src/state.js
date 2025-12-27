@@ -2,8 +2,9 @@ import {getUrlParams, registerUrlListener, updateUrlParams} from "../utilz/url-u
 import {showToast} from "../utilz/popups.js";
 import {Api} from "./api.js";
 import {Bluetooth} from "./bluetooth.js";
-import {SORT_TYPES} from "./routes-page/routes-filter.js";
+import {SORT_TYPES} from "./pages/routes-page/routes-filter.js";
 import {Flutter} from "./flutter-interface.js";
+import {FONT_GRADES, gradeToFont, gradeToV, GradingSystem, V_GRADES} from "./grades.js";
 
 const LOCALSTORAGE_AUTO_LEDS_KEY = "auto_ledz"
 
@@ -265,9 +266,11 @@ function onBackClicked() {
 
 
 let shuffleSortSeed
+
 function seedShuffleSort() {
-    shuffleSortSeed = Math.floor(Math.random() * 2**32)
+    shuffleSortSeed = Math.floor(Math.random() * 2 ** 32)
 }
+
 seedShuffleSort()
 
 function mulberry32random(seed) {
@@ -326,6 +329,14 @@ async function signOut() {
     window.location.reload()
 }
 
+function getGradingSystemMapping() {
+    return state.selectedWall?.gradingSystem === GradingSystem.FONT_SCALE ? FONT_GRADES : V_GRADES
+}
+
+function gradeToDisplayName(grade) {
+    return state.selectedWall?.gradingSystem === GradingSystem.FONT_SCALE ? gradeToFont(grade) : gradeToV(grade)
+}
+
 export {
     GlobalState,
     WallImage,
@@ -348,5 +359,7 @@ export {
     seedShuffleSort,
     isInRoutesPage,
     setFilteredRoutes,
-    getFilteredRoutes
+    getFilteredRoutes,
+    getGradingSystemMapping,
+    gradeToDisplayName
 }

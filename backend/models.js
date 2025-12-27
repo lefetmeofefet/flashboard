@@ -1,10 +1,11 @@
 
 
 class Wall {
-    constructor(id, name, brightness, image, likedRouteIds, sentRouteIds, starredRoutes, users, createdAt, defaultHoldDiameter) {
+    constructor(id, name, brightness, gradingSystem, image, likedRouteIds, sentRouteIds, starredRoutes, users, createdAt, defaultHoldDiameter) {
         this.id = id
         this.name = name
         this.brightness = brightness
+        this.gradingSystem = gradingSystem
         this.image = image
         /** @type {Set} */
         this.likedRouteIds = likedRouteIds

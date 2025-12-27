@@ -156,6 +156,13 @@ async function setWallBrightness(brightness) {
     })
 }
 
+async function setWallGradingSystem(gradingSystem) {
+    return await post("/api/setWallGradingSystem", {
+        wallId: GlobalState.selectedWall.id,
+        gradingSystem
+    })
+}
+
 async function setWallDefaultHoldDiameter(diameter) {
     return await post("/api/setWallDefaultHoldDiameter", {
         wallId: GlobalState.selectedWall.id,
@@ -254,6 +261,7 @@ const Api = {
     setWallImage,
     setWallName,
     setWallBrightness,
+    setWallGradingSystem,
     setWallDefaultHoldDiameter,
     createRoute,
     updateRoute,

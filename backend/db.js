@@ -158,6 +158,7 @@ async function getWallInfo(wallId, userId) {
            wall.image as image,
            wall.name as name,
            wall.brightness as brightness,
+           wall.gradingSystem as gradingSystem,
            wall.createdAt as createdAt,
            wall.defaultHoldDiameter as defaultHoldDiameter,
            sentRouteIds as sentRouteIds,
@@ -186,6 +187,13 @@ async function setWallBrightness(wallId, brightness) {
     MATCH (wall:Wall{id: $wallId})
     SET wall.brightness = $brightness
     `, {wallId, brightness})
+}
+
+async function setWallGradingSystem(wallId, gradingSystem) {
+    return await queryNeo4jSingleResult(`
+    MATCH (wall:Wall{id: $wallId})
+    SET wall.gradingSystem = $gradingSystem
+    `, {wallId, gradingSystem})
 }
 
 async function setWallDefaultHoldDiameter(wallId, diameter) {
@@ -558,6 +566,7 @@ export {
     setWallImage,
     setWallName,
     setWallBrightness,
+    setWallGradingSystem,
     setWallDefaultHoldDiameter,
     createUser,
     getUserById,
